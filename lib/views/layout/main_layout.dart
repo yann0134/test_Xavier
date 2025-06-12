@@ -35,11 +35,10 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
+        body: Stack(children: [
+      Row(
         children: [
-          Row(
-            children: [
-              MouseRegion(
+          MouseRegion(
             onEnter: (_) => setState(() => _isExtended = true),
             onExit: (_) => setState(() => _isExtended = false),
             child: NavigationRail(
@@ -119,6 +118,6 @@ class _MainLayoutState extends State<MainLayout> {
         ],
       ),
       const AssistantChatOverlay(),
-    );
+    ]));
   }
 }
