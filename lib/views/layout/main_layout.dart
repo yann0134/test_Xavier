@@ -33,6 +33,14 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const CaisseIAPage()),
+          );
+        },
+        child: const Icon(Icons.smart_toy),
+      ),
       body: Row(
         children: [
           MouseRegion(

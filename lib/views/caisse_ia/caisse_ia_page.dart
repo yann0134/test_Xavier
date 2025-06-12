@@ -8,18 +8,24 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../models/llm_agent_model.dart';
 
 class MessageContent {
-  final String type; // 'text', 'image', 'chart', 'pdf'
+  final String type; // 'text', 'image', 'chart', 'pdf', 'table'
   final String content;
   final Map<String, dynamic>? metadata;
+  final List<List<String>>? tableData;
+  final List<String>? headers;
 
   MessageContent({
     required this.type,
     required this.content,
     this.metadata,
+    this.tableData,
+    this.headers,
   });
 }
 
 class CaisseIAPage extends StatefulWidget {
+  const CaisseIAPage({super.key});
+
   @override
   _CaisseIAPageState createState() => _CaisseIAPageState();
 }
@@ -102,6 +108,16 @@ class _CaisseIAPageState extends State<CaisseIAPage> {
                                   content: content['content'] as String,
                                   metadata: content['metadata']
                                       as Map<String, dynamic>?,
+                                  tableData:
+                                      (content['tableData'] as List?)
+                                          ?.map<List<String>>(
+                                              (row) => (row as List)
+                                                  .map((e) => e.toString())
+                                                  .toList())
+                                          .toList(),
+                                  headers: (content['headers'] as List?)
+                                      ?.map((e) => e.toString())
+                                      .toList(),
                                 ))
                             .toList();
 
@@ -243,6 +259,24 @@ class _CaisseIAPageState extends State<CaisseIAPage> {
           ),
           child: // Intégrez ici votre widget de graphique
               Image.network(content.content), // Temporaire pour l'exemple
+        );
+
+      case 'table':
+        final headers = content.headers ?? [];
+        final rows = content.tableData ?? [];
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            columns:
+                headers.map((h) => DataColumn(label: Text(h))).toList(),
+            rows: rows
+                .map((r) => DataRow(
+                      cells: r
+                          .map((c) => DataCell(Text(c.toString())))
+                          .toList(),
+                    ))
+                .toList(),
+          ),
         );
 
       case 'pdf':
