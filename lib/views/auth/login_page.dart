@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import 'package:scoped_model/scoped_model.dart';
+import '../../scoped_models/main_model.dart';
+import 'dart:io';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -24,9 +27,17 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  height: 100,
+                ScopedModelDescendant<MainModel>(
+                  builder: (context, child, model) {
+                    final path = model.logoPath;
+                    return Image(
+                      image: path != null
+                          ? FileImage(File(path))
+                              as ImageProvider
+                          : const AssetImage('assets/images/logo.png'),
+                      height: 100,
+                    );
+                  },
                 ),
                 SizedBox(height: 48),
                 Card(

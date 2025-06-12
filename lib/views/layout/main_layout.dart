@@ -1,5 +1,5 @@
 import 'package:caissepro/views/accueil/home_page.dart';
-import 'package:caissepro/views/caisse_ia/caisse_ia_page.dart';
+// import 'package:caissepro/views/caisse_ia/caisse_ia_page.dart';
 import 'package:flutter/material.dart';
 import 'package:scoped_model/scoped_model.dart';
 import '../widgets/side_menu.dart';
@@ -10,6 +10,8 @@ import '../produits/produits_page.dart';
 import '../rapports/rapport_page.dart';
 import '../parametres/settings_page.dart';
 import '../gestion/gestion_page.dart';
+import '../assistant/assistant_chat_overlay.dart';
+import '../../localization/app_localizations.dart';
 
 class MainLayout extends StatefulWidget {
   final int selectedIndex;
@@ -33,17 +35,11 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const CaisseIAPage()),
-          );
-        },
-        child: const Icon(Icons.smart_toy),
-      ),
-      body: Row(
+      body: Stack(
         children: [
-          MouseRegion(
+          Row(
+            children: [
+              MouseRegion(
             onEnter: (_) => setState(() => _isExtended = true),
             onExit: (_) => setState(() => _isExtended = false),
             child: NavigationRail(
@@ -62,46 +58,46 @@ class _MainLayoutState extends State<MainLayout> {
                   _currentIndex = index;
                 });
               },
-              destinations: const [
+              destinations: [
                 NavigationRailDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home),
-                  label: Text('Accueil'),
+                  icon: const Icon(Icons.home_outlined),
+                  selectedIcon: const Icon(Icons.home),
+                  label: Text(AppLocalizations.of(context).translate('home')),
                 ),
                 NavigationRailDestination(
-                  icon: Icon(Icons.point_of_sale_outlined),
-                  selectedIcon: Icon(Icons.point_of_sale),
-                  label: Text('Caisse'),
+                  icon: const Icon(Icons.point_of_sale_outlined),
+                  selectedIcon: const Icon(Icons.point_of_sale),
+                  label: Text(AppLocalizations.of(context).translate('orders')),
                 ),
                 NavigationRailDestination(
-                  icon: Icon(Icons.history_outlined),
-                  selectedIcon: Icon(Icons.history),
-                  label: Text('Historique'),
+                  icon: const Icon(Icons.history_outlined),
+                  selectedIcon: const Icon(Icons.history),
+                  label:
+                      Text(AppLocalizations.of(context).translate('history')),
                 ),
                 NavigationRailDestination(
-                  icon: Icon(Icons.inventory_2_outlined),
-                  selectedIcon: Icon(Icons.inventory_2),
-                  label: Text('Produits'),
+                  icon: const Icon(Icons.inventory_2_outlined),
+                  selectedIcon: const Icon(Icons.inventory_2),
+                  label:
+                      Text(AppLocalizations.of(context).translate('products')),
                 ),
                 NavigationRailDestination(
-                  icon: Icon(Icons.bar_chart_outlined),
-                  selectedIcon: Icon(Icons.bar_chart),
-                  label: Text('Rapports'),
+                  icon: const Icon(Icons.bar_chart_outlined),
+                  selectedIcon: const Icon(Icons.bar_chart),
+                  label:
+                      Text(AppLocalizations.of(context).translate('reports')),
                 ),
                 NavigationRailDestination(
-                  icon: Icon(Icons.shopping_cart_outlined),
-                  selectedIcon: Icon(Icons.shopping_cart),
-                  label: Text('Gestion'),
+                  icon: const Icon(Icons.shopping_cart_outlined),
+                  selectedIcon: const Icon(Icons.shopping_cart),
+                  label: Text(
+                      AppLocalizations.of(context).translate('management')),
                 ),
                 NavigationRailDestination(
-                  icon: Icon(Icons.settings_outlined),
-                  selectedIcon: Icon(Icons.settings),
-                  label: Text('Paramètres'),
-                ),
-                NavigationRailDestination(
-                  icon: Icon(Icons.smart_toy_outlined),
-                  selectedIcon: Icon(Icons.smart_toy),
-                  label: Text('Assistant IA'),
+                  icon: const Icon(Icons.settings_outlined),
+                  selectedIcon: const Icon(Icons.settings),
+                  label:
+                      Text(AppLocalizations.of(context).translate('settings')),
                 ),
               ],
             ),
@@ -117,12 +113,12 @@ class _MainLayoutState extends State<MainLayout> {
                 RapportPage(),
                 GestionPage(),
                 SettingsPage(),
-                CaisseIAPage(),
               ],
             ),
           ),
         ],
       ),
+      const AssistantChatOverlay(),
     );
   }
 }
