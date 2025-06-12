@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../ai_agent/modular_ai_agent.dart';
 import '../../ai_agent/tool_manager.dart';
 import '../../ai_agent/tool_registry.dart';
@@ -25,8 +26,8 @@ class _ModularAIPageState extends State<ModularAIPage> {
 
   Future<void> _loadTools() async {
     final prefs = await SharedPreferences.getInstance();
-    final enabled =
-        prefs.getStringList('enabled_tools') ?? ToolRegistry.tools.keys.toList();
+    final enabled = prefs.getStringList('enabled_tools') ??
+        ToolRegistry.tools.keys.toList();
     final manager = ToolManager();
     for (final name in enabled) {
       final ctor = ToolRegistry.tools[name];
@@ -64,9 +65,7 @@ class _ModularAIPageState extends State<ModularAIPage> {
           children: [
             TextField(
               controller: controller,
-              decoration: InputDecoration(
-                hintText: 'ask_hint'.tr
-              ),
+              decoration: InputDecoration(hintText: 'ask_hint'.tr),
             ),
             const SizedBox(height: 16),
             ElevatedButton(

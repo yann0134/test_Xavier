@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:scoped_model/scoped_model.dart';
 import '../../scoped_models/main_model.dart';
 import '../../services/db_helper.dart';
