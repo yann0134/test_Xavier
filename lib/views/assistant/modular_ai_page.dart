@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../ai_agent/modular_ai_agent.dart';
 import '../../ai_agent/tool_manager.dart';
 import '../../ai_agent/tool_registry.dart';
+import '../../ai_agent/gemini_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ModularAIPage extends StatefulWidget {
@@ -35,7 +36,8 @@ class _ModularAIPageState extends State<ModularAIPage> {
         manager.registerTool(ctor());
       }
     }
-    agent = ModularAIAgent(manager);
+    final gemini = GeminiService(apiKey: 'AIzaSyCCVre0MdH35vty9lRbqQ0FglYKPt8KQ9c');
+    agent = ModularAIAgent(manager, gemini);
     setState(() => _loading = false);
   }
 
