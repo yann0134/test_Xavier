@@ -50,6 +50,7 @@ dependencies:
   rxdart: ^0.28.0
   currency_picker: ^2.0.21
   get: ^4.7.2
+  math_expressions: ^2.2.0
 
 dev_dependencies:
   flutter_test:

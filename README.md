@@ -14,3 +14,4 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+\n## Modular AI Assistant\nRun the route '/assistant' to try the modular AI agent with translator, weather and calculator tools.
