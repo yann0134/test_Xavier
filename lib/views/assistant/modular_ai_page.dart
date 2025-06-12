@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../ai_agent/modular_ai_agent.dart';
 import '../../ai_agent/tool_manager.dart';
-import '../../ai_agent/tools/translator_tool.dart';
-import '../../ai_agent/tools/weather_tool.dart';
-import '../../ai_agent/tools/calculator_tool.dart';
-import '../../ai_agent/tools/database_tool.dart';
+import '../../ai_agent/tool_registry.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ModularAIPage extends StatefulWidget {
   const ModularAIPage({Key? key}) : super(key: key);
@@ -14,19 +12,30 @@ class ModularAIPage extends StatefulWidget {
 }
 
 class _ModularAIPageState extends State<ModularAIPage> {
-  late final ModularAIAgent agent;
+  late ModularAIAgent agent;
+  bool _loading = true;
   final TextEditingController controller = TextEditingController();
   String response = '';
 
   @override
   void initState() {
     super.initState();
+    _loadTools();
+  }
+
+  Future<void> _loadTools() async {
+    final prefs = await SharedPreferences.getInstance();
+    final enabled =
+        prefs.getStringList('enabled_tools') ?? ToolRegistry.tools.keys.toList();
     final manager = ToolManager();
-    manager.registerTool(TranslatorTool());
-    manager.registerTool(WeatherTool());
-    manager.registerTool(CalculatorTool());
-    manager.registerTool(DatabaseTool());
+    for (final name in enabled) {
+      final ctor = ToolRegistry.tools[name];
+      if (ctor != null) {
+        manager.registerTool(ctor());
+      }
+    }
     agent = ModularAIAgent(manager);
+    setState(() => _loading = false);
   }
 
   Future<void> _submit() async {
@@ -40,6 +49,13 @@ class _ModularAIPageState extends State<ModularAIPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_loading) {
+      return Scaffold(
+        appBar: AppBar(title: Text('assistant'.tr)),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: Text('assistant'.tr)),
       body: Padding(

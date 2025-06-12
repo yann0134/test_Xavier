@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:scoped_model/scoped_model.dart';
 import '../../scoped_models/main_model.dart';
 import '../../localization/app_localizations.dart';
+import '../../ai_agent/tool_registry.dart';
 
 class SettingsPage extends StatefulWidget {
   @override
@@ -55,6 +56,9 @@ class _SettingsPageState extends State<SettingsPage> {
   String selectedPrinterType = 'USB';
   TextEditingController ipAddressController = TextEditingController();
   TextEditingController usbPortController = TextEditingController();
+
+  final List<String> allTools = ToolRegistry.tools.keys.toList();
+  List<String> enabledTools = [];
 
   // Mise à jour des données utilisateurs
   List<Map<String, dynamic>> users = [
@@ -113,6 +117,7 @@ class _SettingsPageState extends State<SettingsPage> {
         stockAlerts = _prefs.getBool('stockAlerts') ?? false;
         salesAlerts = _prefs.getBool('salesAlerts') ?? false;
         logoPath = _prefs.getString('logoPath');
+        enabledTools = _prefs.getStringList('enabled_tools') ?? List.from(allTools);
       });
 
       // Charger les param\xC3\xA8tres système depuis SharedPreferences ou BD
@@ -195,6 +200,7 @@ class _SettingsPageState extends State<SettingsPage> {
         if (acceptMobile) 'mobile',
         if (acceptBankTransfer) 'transfer',
       ].join(','));
+      await _prefs.setStringList('enabled_tools', enabledTools);
 
       final model = ScopedModel.of<MainModel>(context);
       model.setThemeMode(isDarkMode ? ThemeMode.dark : ThemeMode.light);
@@ -1015,6 +1021,27 @@ class _SettingsPageState extends State<SettingsPage> {
                               (value) => setState(() => isDarkMode = value),
                             ),
                           ],
+                        ),
+                      ),
+                      SizedBox(height: 24),
+                      _buildSectionCard(
+                        'Outils IA',
+                        Column(
+                          children: allTools.map((tool) {
+                            return SwitchListTile(
+                              title: Text(tool),
+                              value: enabledTools.contains(tool),
+                              onChanged: (val) {
+                                setState(() {
+                                  if (val) {
+                                    enabledTools.add(tool);
+                                  } else {
+                                    enabledTools.remove(tool);
+                                  }
+                                });
+                              },
+                            );
+                          }).toList(),
                         ),
                       ),
                     ],
