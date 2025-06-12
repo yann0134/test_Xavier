@@ -6,12 +6,28 @@ class ModularAIAgent {
 
   ModularAIAgent(this.toolManager);
 
+  /// Build a help message listing all available tools.
+  String _availableToolsMessage() {
+    final buffer = StringBuffer('Available tools:\n');
+    for (final tool in toolManager.tools) {
+      buffer.writeln('- ${tool.name}: ${tool.description}');
+    }
+    return buffer.toString().trim();
+  }
+
   Future<String> process(String query) async {
+    final normalized = query.trim().toLowerCase();
+
+    if (normalized == 'help') {
+      return _availableToolsMessage();
+    }
+
     for (final tool in toolManager.tools) {
       if (tool.canHandle(query)) {
         return await tool.handle(query);
       }
     }
-    return 'No tool available for this request.';
+
+    return _availableToolsMessage();
   }
 }
