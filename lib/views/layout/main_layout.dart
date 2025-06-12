@@ -61,42 +61,37 @@ class _MainLayoutState extends State<MainLayout> {
                 NavigationRailDestination(
                   icon: const Icon(Icons.home_outlined),
                   selectedIcon: const Icon(Icons.home),
-                  label: Text(AppLocalizations.of(context).translate('home')),
+                  label: Text('home'.tr),
                 ),
                 NavigationRailDestination(
                   icon: const Icon(Icons.point_of_sale_outlined),
                   selectedIcon: const Icon(Icons.point_of_sale),
-                  label: Text(AppLocalizations.of(context).translate('orders')),
+                  label: Text('orders'.tr),
                 ),
                 NavigationRailDestination(
                   icon: const Icon(Icons.history_outlined),
                   selectedIcon: const Icon(Icons.history),
-                  label:
-                      Text(AppLocalizations.of(context).translate('history')),
+                  label: Text('history'.tr),
                 ),
                 NavigationRailDestination(
                   icon: const Icon(Icons.inventory_2_outlined),
                   selectedIcon: const Icon(Icons.inventory_2),
-                  label:
-                      Text(AppLocalizations.of(context).translate('products')),
+                  label: Text('products'.tr),
                 ),
                 NavigationRailDestination(
                   icon: const Icon(Icons.bar_chart_outlined),
                   selectedIcon: const Icon(Icons.bar_chart),
-                  label:
-                      Text(AppLocalizations.of(context).translate('reports')),
+                  label: Text('reports'.tr),
                 ),
                 NavigationRailDestination(
                   icon: const Icon(Icons.shopping_cart_outlined),
                   selectedIcon: const Icon(Icons.shopping_cart),
-                  label: Text(
-                      AppLocalizations.of(context).translate('management')),
+                  label: Text('management'.tr),
                 ),
                 NavigationRailDestination(
                   icon: const Icon(Icons.settings_outlined),
                   selectedIcon: const Icon(Icons.settings),
-                  label:
-                      Text(AppLocalizations.of(context).translate('settings')),
+                  label: Text('settings'.tr),
                 ),
               ],
             ),

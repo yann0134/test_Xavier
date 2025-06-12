@@ -4,6 +4,7 @@ import '../../ai_agent/tool_manager.dart';
 import '../../ai_agent/tools/translator_tool.dart';
 import '../../ai_agent/tools/weather_tool.dart';
 import '../../ai_agent/tools/calculator_tool.dart';
+import '../../ai_agent/tools/database_tool.dart';
 
 class ModularAIPage extends StatefulWidget {
   const ModularAIPage({Key? key}) : super(key: key);
@@ -24,6 +25,7 @@ class _ModularAIPageState extends State<ModularAIPage> {
     manager.registerTool(TranslatorTool());
     manager.registerTool(WeatherTool());
     manager.registerTool(CalculatorTool());
+    manager.registerTool(DatabaseTool());
     agent = ModularAIAgent(manager);
   }
 
@@ -39,21 +41,21 @@ class _ModularAIPageState extends State<ModularAIPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Modular AI Assistant')),
+      appBar: AppBar(title: Text('assistant'.tr)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
               controller: controller,
-              decoration: const InputDecoration(
-                hintText: 'Ask something...'
+              decoration: InputDecoration(
+                hintText: 'ask_hint'.tr
               ),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _submit,
-              child: const Text('Send'),
+              child: Text('send'.tr),
             ),
             const SizedBox(height: 24),
             Text(response),

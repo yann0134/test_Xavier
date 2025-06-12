@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:scoped_model/scoped_model.dart';
+import 'package:get/get.dart';
 import 'services/db_helper.dart';
 import 'scoped_models/main_model.dart';
 import 'routes.dart';
 import 'localization/app_localizations.dart';
+import 'localization/app_translations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,12 +29,14 @@ class MyApp extends StatelessWidget {
       model: mainModel,
       child: ScopedModelDescendant<MainModel>(
         builder: (context, child, model) {
-          return MaterialApp(
+          return GetMaterialApp(
             title: 'CaissePro',
             theme: ThemeData.light().copyWith(useMaterial3: true),
             darkTheme: ThemeData.dark().copyWith(useMaterial3: true),
             themeMode: model.themeMode,
             locale: model.locale,
+            translations: AppTranslations(),
+            fallbackLocale: const Locale('fr', 'FR'),
             supportedLocales: const [Locale('fr'), Locale('en')],
             localizationsDelegates: const [
               AppLocalizations.delegate,
