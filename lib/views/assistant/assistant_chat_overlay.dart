@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../ai_agent/modular_ai_agent.dart';
 import '../../ai_agent/tool_manager.dart';
-import '../../ai_agent/tools/translator_tool.dart';
-import '../../ai_agent/tools/weather_tool.dart';
-import '../../ai_agent/tools/calculator_tool.dart';
-import '../../ai_agent/tools/database_tool.dart';
+import '../../ai_agent/tool_registry.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
 
 class AssistantChatOverlay extends StatefulWidget {
@@ -16,24 +14,36 @@ class AssistantChatOverlay extends StatefulWidget {
 
 class _AssistantChatOverlayState extends State<AssistantChatOverlay> {
   bool _isOpen = false;
-  late final ModularAIAgent agent;
+  late ModularAIAgent agent;
+  bool _loading = true;
   final TextEditingController controller = TextEditingController();
   final List<String> messages = [];
 
   @override
   void initState() {
     super.initState();
+    _loadTools();
+  }
+
+  Future<void> _loadTools() async {
+    final prefs = await SharedPreferences.getInstance();
+    final enabled =
+        prefs.getStringList('enabled_tools') ?? ToolRegistry.tools.keys.toList();
     final manager = ToolManager();
-    manager.registerTool(TranslatorTool());
-    manager.registerTool(WeatherTool());
-    manager.registerTool(CalculatorTool());
-    manager.registerTool(DatabaseTool());
+    for (final name in enabled) {
+      final ctor = ToolRegistry.tools[name];
+      if (ctor != null) {
+        manager.registerTool(ctor());
+      }
+    }
     agent = ModularAIAgent(manager);
+    setState(() => _loading = false);
   }
 
   Future<void> _submit() async {
     final query = controller.text.trim();
     if (query.isEmpty) return;
+    if (_loading) return;
     setState(() {
       messages.add('> $query');
     });
@@ -87,10 +97,12 @@ class _AssistantChatOverlayState extends State<AssistantChatOverlay> {
               ),
               const Divider(height: 1),
               Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(8),
-                  children: messages.map((m) => Text(m)).toList(),
-                ),
+                child: _loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : ListView(
+                        padding: const EdgeInsets.all(8),
+                        children: messages.map((m) => Text(m)).toList(),
+                      ),
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),

@@ -18,6 +18,10 @@ samples, guidance on mobile development, and a full API reference.
 ## Modular AI Assistant
 Run the route '/assistant' to try the modular AI agent with translator, weather, calculator and database tools.
 
+Tools can now be enabled or disabled from the settings page. The chosen tools
+are stored in `SharedPreferences` under the key `enabled_tools` and loaded when
+the assistant starts.
+
 ### Supported command formats
 - `translate <from>-<to> <text>`
 - `weather <city>`
