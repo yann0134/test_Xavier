@@ -1,6 +1,7 @@
 import 'package:caissepro/views/accueil/home_page.dart';
 // import 'package:caissepro/views/caisse_ia/caisse_ia_page.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:scoped_model/scoped_model.dart';
 import '../widgets/side_menu.dart';
 import '../commandes/commande_page.dart';

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import '../../services/db_helper.dart';
@@ -94,7 +95,8 @@ class _SettingsPageState extends State<SettingsPage> {
     });
     final model = ScopedModel.of<MainModel>(context, rebuildOnChange: false);
     isDarkMode = model.themeMode == ThemeMode.dark;
-    selectedLanguage = model.locale.languageCode == 'en' ? 'English' : 'Français';
+    selectedLanguage =
+        model.locale.languageCode == 'en' ? 'English' : 'Français';
     logoPath = model.logoPath;
     _initializeSettings();
   }
@@ -189,12 +191,14 @@ class _SettingsPageState extends State<SettingsPage> {
       await _prefs.setString('currency', selectedCurrency.code);
       await _prefs.setString('timezone', selectedTimeZone);
       await _prefs.setString('tva', selectedTVA);
-      await _prefs.setString('payment_methods', [
-        if (acceptCash) 'cash',
-        if (acceptCard) 'card',
-        if (acceptMobile) 'mobile',
-        if (acceptBankTransfer) 'transfer',
-      ].join(','));
+      await _prefs.setString(
+          'payment_methods',
+          [
+            if (acceptCash) 'cash',
+            if (acceptCard) 'card',
+            if (acceptMobile) 'mobile',
+            if (acceptBankTransfer) 'transfer',
+          ].join(','));
 
       final model = ScopedModel.of<MainModel>(context);
       model.setThemeMode(isDarkMode ? ThemeMode.dark : ThemeMode.light);
@@ -768,7 +772,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                         image: logoPath != null
                                             ? FileImage(File(logoPath!))
                                                 as ImageProvider
-                                            : const AssetImage('assets/images/logo.png'),
+                                            : const AssetImage(
+                                                'assets/images/logo.png'),
                                         fit: BoxFit.cover,
                                       ),
                                     ),
@@ -854,8 +859,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
-                                items: ['Français', 'English']
-                                    .map((String value) {
+                                items:
+                                    ['Français', 'English'].map((String value) {
                                   return DropdownMenuItem<String>(
                                     value: value,
                                     child: Text(value),
