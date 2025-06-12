@@ -8,7 +8,7 @@ class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const Map<String, Map<String, String>> _localizedValues = {
+  static const Map<String, Map<String, String>> localizedValues = {
     'en': {
       'home': 'Home',
       'orders': 'Orders',
@@ -40,8 +40,8 @@ class AppLocalizations {
   };
 
   String translate(String key) {
-    return _localizedValues[locale.languageCode]?[key] ??
-        _localizedValues['en']![key] ?? key;
+    return localizedValues[locale.languageCode]?[key] ??
+        localizedValues['en']![key] ?? key;
   }
 
   static const LocalizationsDelegate<AppLocalizations> delegate =

@@ -4,7 +4,8 @@ import '../../ai_agent/tool_manager.dart';
 import '../../ai_agent/tools/translator_tool.dart';
 import '../../ai_agent/tools/weather_tool.dart';
 import '../../ai_agent/tools/calculator_tool.dart';
-import '../../localization/app_localizations.dart';
+import '../../ai_agent/tools/database_tool.dart';
+import 'package:get/get.dart';
 
 class AssistantChatOverlay extends StatefulWidget {
   const AssistantChatOverlay({super.key});
@@ -26,6 +27,7 @@ class _AssistantChatOverlayState extends State<AssistantChatOverlay> {
     manager.registerTool(TranslatorTool());
     manager.registerTool(WeatherTool());
     manager.registerTool(CalculatorTool());
+    manager.registerTool(DatabaseTool());
     agent = ModularAIAgent(manager);
   }
 
@@ -44,10 +46,9 @@ class _AssistantChatOverlayState extends State<AssistantChatOverlay> {
 
   @override
   Widget build(BuildContext context) {
-    final t = AppLocalizations.of(context);
     if (!_isOpen) {
       return Positioned(
-        top: 16,
+        bottom: 16,
         right: 16,
         child: FloatingActionButton.small(
           onPressed: () => setState(() => _isOpen = true),
@@ -57,7 +58,7 @@ class _AssistantChatOverlayState extends State<AssistantChatOverlay> {
     }
 
     return Positioned(
-      top: 16,
+      bottom: 16,
       right: 16,
       child: Material(
         elevation: 8,
@@ -75,7 +76,7 @@ class _AssistantChatOverlayState extends State<AssistantChatOverlay> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 child: Row(
                   children: [
-                    const Text('AI'),
+                    Text('assistant'.tr),
                     const Spacer(),
                     IconButton(
                       icon: const Icon(Icons.close),
@@ -99,7 +100,7 @@ class _AssistantChatOverlayState extends State<AssistantChatOverlay> {
                       child: TextField(
                         controller: controller,
                         decoration: InputDecoration(
-                          hintText: t.translate('ask_hint'),
+                          hintText: 'ask_hint'.tr,
                         ),
                       ),
                     ),
