@@ -731,6 +731,12 @@ class _SettingsPageState extends State<SettingsPage> {
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
           title: Text('Paramètres système'),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.save),
+              onPressed: _saveSettings,
+            ),
+          ],
         ),
         Expanded(
           child: SingleChildScrollView(
@@ -1536,7 +1542,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         SizedBox(width: 16),
                         ElevatedButton(
                           onPressed: () {
-                            // Sauvegarder les paramètres
+                            _saveSettings();
                             Navigator.pop(context);
                           },
                           child: Text('Enregistrer'),
