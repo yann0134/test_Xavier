@@ -154,8 +154,7 @@ class SideMenu extends StatelessWidget {
                       _buildMenuItem(
                         context: context,
                         icon: Icons.brightness_4,
-                        title:
-                            AppLocalizations.of(context).translate('dark_theme'),
+                        title: 'dark_theme'.tr,
                         index: 7,
                         isSelected: model.currentIndex == 7,
                         model: model,

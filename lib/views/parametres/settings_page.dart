@@ -115,13 +115,13 @@ class _SettingsPageState extends State<SettingsPage> {
         logoPath = _prefs.getString('logoPath');
       });
 
-      // Charger les paramètres système depuis la BD
+      // Charger les param\xC3\xA8tres système depuis SharedPreferences ou BD
       final db = await DBHelper.database;
       final systemSettings = await db.query('parametres');
 
       for (var setting in systemSettings) {
         String key = setting['cle'] as String;
-        String value = setting['valeur'] as String;
+        String value = _prefs.getString(key) ?? setting['valeur'] as String;
 
         switch (key) {
           case 'currency':
@@ -186,6 +186,15 @@ class _SettingsPageState extends State<SettingsPage> {
       await _prefs.setBool('stockAlerts', stockAlerts);
       await _prefs.setBool('salesAlerts', salesAlerts);
       await _prefs.setString('logoPath', logoPath ?? '');
+      await _prefs.setString('currency', selectedCurrency.code);
+      await _prefs.setString('timezone', selectedTimeZone);
+      await _prefs.setString('tva', selectedTVA);
+      await _prefs.setString('payment_methods', [
+        if (acceptCash) 'cash',
+        if (acceptCard) 'card',
+        if (acceptMobile) 'mobile',
+        if (acceptBankTransfer) 'transfer',
+      ].join(','));
 
       final model = ScopedModel.of<MainModel>(context);
       model.setThemeMode(isDarkMode ? ThemeMode.dark : ThemeMode.light);
@@ -267,6 +276,10 @@ class _SettingsPageState extends State<SettingsPage> {
         final newPath = '${dir.path}/logo.png';
         await file.copy(newPath);
         setState(() => logoPath = newPath);
+        // Save directly when logo changes
+        await _prefs.setString('logoPath', logoPath!);
+        final db = await DBHelper.database;
+        await _updateSetting(db, 'logo_path', logoPath!);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Logo mis à jour')),
         );
@@ -990,8 +1003,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         Column(
                           children: [
                             _buildNotificationToggle(
-                              AppLocalizations.of(context)
-                                  .translate('dark_theme'),
+                              'dark_theme'.tr,
                               'Activer le mode sombre',
                               isDarkMode,
                               (value) => setState(() => isDarkMode = value),
