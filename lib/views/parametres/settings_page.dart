@@ -6,6 +6,10 @@ import 'package:sqflite/sqflite.dart';
 import '../../services/db_helper.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:currency_picker/currency_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:scoped_model/scoped_model.dart';
+import '../../scoped_models/main_model.dart';
+import '../../localization/app_localizations.dart';
 
 class SettingsPage extends StatefulWidget {
   @override
@@ -32,6 +36,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool appNotifications = false; // Valeur par défaut
   bool stockAlerts = false; // Valeur par défaut
   bool salesAlerts = false; // Valeur par défaut
+  String? logoPath;
 
   // Méthodes de paiement avec valeurs par défaut
   bool acceptCash = true; // Valeur par défaut
@@ -87,6 +92,10 @@ class _SettingsPageState extends State<SettingsPage> {
       "thousands_separator": " ",
       "space_between_amount_and_symbol": true
     });
+    final model = ScopedModel.of<MainModel>(context, rebuildOnChange: false);
+    isDarkMode = model.themeMode == ThemeMode.dark;
+    selectedLanguage = model.locale.languageCode == 'en' ? 'English' : 'Français';
+    logoPath = model.logoPath;
     _initializeSettings();
   }
 
@@ -103,6 +112,7 @@ class _SettingsPageState extends State<SettingsPage> {
         appNotifications = _prefs.getBool('appNotifications') ?? false;
         stockAlerts = _prefs.getBool('stockAlerts') ?? false;
         salesAlerts = _prefs.getBool('salesAlerts') ?? false;
+        logoPath = _prefs.getString('logoPath');
       });
 
       // Charger les paramètres système depuis la BD
@@ -175,6 +185,12 @@ class _SettingsPageState extends State<SettingsPage> {
       await _prefs.setBool('appNotifications', appNotifications);
       await _prefs.setBool('stockAlerts', stockAlerts);
       await _prefs.setBool('salesAlerts', salesAlerts);
+      await _prefs.setString('logoPath', logoPath ?? '');
+
+      final model = ScopedModel.of<MainModel>(context);
+      model.setThemeMode(isDarkMode ? ThemeMode.dark : ThemeMode.light);
+      model.setLocale(Locale(selectedLanguage == 'English' ? 'en' : 'fr'));
+      model.setLogoPath(logoPath);
 
       // Sauvegarder les paramètres système
       final db = await DBHelper.database;
@@ -247,7 +263,10 @@ class _SettingsPageState extends State<SettingsPage> {
 
       if (result != null) {
         final file = File(result.files.single.path!);
-        // TODO: Implémenter la sauvegarde du logo
+        final dir = await getApplicationDocumentsDirectory();
+        final newPath = '${dir.path}/logo.png';
+        await file.copy(newPath);
+        setState(() => logoPath = newPath);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Logo mis à jour')),
         );
@@ -733,8 +752,10 @@ class _SettingsPageState extends State<SettingsPage> {
                                       color: Colors.grey[100],
                                       borderRadius: BorderRadius.circular(8),
                                       image: DecorationImage(
-                                        image: AssetImage(
-                                            'assets/images/logo.png'),
+                                        image: logoPath != null
+                                            ? FileImage(File(logoPath!))
+                                                as ImageProvider
+                                            : const AssetImage('assets/images/logo.png'),
                                         fit: BoxFit.cover,
                                       ),
                                     ),
@@ -820,7 +841,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
-                                items: ['Français', 'English', 'Español']
+                                items: ['Français', 'English']
                                     .map((String value) {
                                   return DropdownMenuItem<String>(
                                     value: value,
@@ -969,7 +990,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         Column(
                           children: [
                             _buildNotificationToggle(
-                              'Thème sombre',
+                              AppLocalizations.of(context)
+                                  .translate('dark_theme'),
                               'Activer le mode sombre',
                               isDarkMode,
                               (value) => setState(() => isDarkMode = value),

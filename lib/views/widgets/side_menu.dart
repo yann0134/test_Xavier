@@ -3,6 +3,8 @@ import 'package:scoped_model/scoped_model.dart';
 import '../../scoped_models/main_model.dart';
 import '../../services/db_helper.dart';
 import '../../services/page_state_service.dart';
+import '../../localization/app_localizations.dart';
+import 'dart:io';
 
 class SideMenu extends StatelessWidget {
   final _pageStateService = PageStateService();
@@ -106,7 +108,10 @@ class SideMenu extends StatelessWidget {
                   padding: EdgeInsets.symmetric(vertical: 24, horizontal: 16),
                   child: Row(
                     children: [
-                      Image.asset('assets/images/logo.png', height: 32),
+                      if (model.logoPath != null)
+                        Image.file(File(model.logoPath!), height: 32)
+                      else
+                        Image.asset('assets/images/logo.png', height: 32),
                       SizedBox(width: 12),
                       Text(
                         'CaissePro',
@@ -123,118 +128,39 @@ class SideMenu extends StatelessWidget {
                   child: ListView(
                     padding: EdgeInsets.zero,
                     children: [
-                      _buildMenuItem(
-                        context: context,
-                        icon: Icons.home,
-                        title: 'Accueil',
-                        index: 0,
-                        isSelected: model.currentIndex == 0,
-                        model: model,
-                      ),
-                      _buildMenuItem(
-                        context: context,
-                        icon: Icons.shopping_cart,
-                        title: 'Commande',
-                        index: 1,
-                        isSelected: model.currentIndex == 1,
-                        model: model,
-                      ),
-                      _buildMenuItem(
-                        context: context,
-                        icon: Icons.history,
-                        title: 'Historique',
-                        index: 2,
-                        isSelected: model.currentIndex == 2,
-                        model: model,
-                      ),
-                      _buildMenuItem(
-                        context: context,
-                        icon: Icons.inventory,
-                        title: 'Produits / Stock',
-                        index: 3,
-                        isSelected: model.currentIndex == 3,
-                        model: model,
-                      ),
-                      _buildMenuItem(
-                        context: context,
-                        icon: Icons.bar_chart,
-                        title: 'Rapports',
-                        index: 4,
-                        isSelected: model.currentIndex == 4,
-                        model: model,
-                      ),
-                      _buildMenuItem(
-                        context: context,
-                        icon: Icons.settings,
-                        title: 'Gestion',
-                        index: 5,
-                        isSelected: model.currentIndex == 5,
-                        model: model,
-                      ),
-                      _buildMenuItem(
-                        context: context,
-                        icon: Icons.settings,
-                        title: 'Paramètres',
-                        index: 6,
-                        isSelected: model.currentIndex == 6,
-                        model: model,
-                      ),
+                      // Get translations
+                      ...[
+                        {'icon': Icons.home, 'key': 'home'},
+                        {'icon': Icons.shopping_cart, 'key': 'orders'},
+                        {'icon': Icons.history, 'key': 'history'},
+                        {'icon': Icons.inventory, 'key': 'products'},
+                        {'icon': Icons.bar_chart, 'key': 'reports'},
+                        {'icon': Icons.settings, 'key': 'management'},
+                        {'icon': Icons.settings, 'key': 'settings'},
+                      ].asMap().entries.map((entry) {
+                        final idx = entry.key;
+                        final item = entry.value;
+                        return _buildMenuItem(
+                          context: context,
+                          icon: item['icon'] as IconData,
+                          title: AppLocalizations.of(context)
+                              .translate(item['key'] as String),
+                          index: idx,
+                          isSelected: model.currentIndex == idx,
+                          model: model,
+                        );
+                      }).toList(),
                       Divider(height: 32),
                       _buildMenuItem(
                         context: context,
                         icon: Icons.brightness_4,
-                        title: 'Mode sombre',
+                        title:
+                            AppLocalizations.of(context).translate('dark_theme'),
                         index: 7,
                         isSelected: model.currentIndex == 7,
                         model: model,
                       ),
                     ],
-                  ),
-                ),
-                // Ajouter le bouton IA en bas
-                Container(
-                  padding: EdgeInsets.all(16),
-                  child: InkWell(
-                    onTap: () {
-                      model.setIndex(7); // Nouvel index pour la page IA
-                    },
-                    child: Container(
-                      padding: EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.blue[400]!, Colors.blue[600]!],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.blue.withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.smart_toy,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Assistant IA',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ),
               ],

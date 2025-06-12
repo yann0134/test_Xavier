@@ -1,0 +1,119 @@
+import 'package:flutter/material.dart';
+import '../../ai_agent/modular_ai_agent.dart';
+import '../../ai_agent/tool_manager.dart';
+import '../../ai_agent/tools/translator_tool.dart';
+import '../../ai_agent/tools/weather_tool.dart';
+import '../../ai_agent/tools/calculator_tool.dart';
+import '../../localization/app_localizations.dart';
+
+class AssistantChatOverlay extends StatefulWidget {
+  const AssistantChatOverlay({super.key});
+
+  @override
+  State<AssistantChatOverlay> createState() => _AssistantChatOverlayState();
+}
+
+class _AssistantChatOverlayState extends State<AssistantChatOverlay> {
+  bool _isOpen = false;
+  late final ModularAIAgent agent;
+  final TextEditingController controller = TextEditingController();
+  final List<String> messages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    final manager = ToolManager();
+    manager.registerTool(TranslatorTool());
+    manager.registerTool(WeatherTool());
+    manager.registerTool(CalculatorTool());
+    agent = ModularAIAgent(manager);
+  }
+
+  Future<void> _submit() async {
+    final query = controller.text.trim();
+    if (query.isEmpty) return;
+    setState(() {
+      messages.add('> $query');
+    });
+    controller.clear();
+    final result = await agent.process(query);
+    setState(() {
+      messages.add(result);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context);
+    if (!_isOpen) {
+      return Positioned(
+        top: 16,
+        right: 16,
+        child: FloatingActionButton.small(
+          onPressed: () => setState(() => _isOpen = true),
+          child: const Icon(Icons.chat_bubble_outline),
+        ),
+      );
+    }
+
+    return Positioned(
+      top: 16,
+      right: 16,
+      child: Material(
+        elevation: 8,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 300,
+          height: 400,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Row(
+                  children: [
+                    const Text('AI'),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => setState(() => _isOpen = false),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(8),
+                  children: messages.map((m) => Text(m)).toList(),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: controller,
+                        decoration: InputDecoration(
+                          hintText: t.translate('ask_hint'),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: _submit,
+                      icon: const Icon(Icons.send),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
