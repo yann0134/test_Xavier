@@ -261,303 +261,315 @@ class _HomePageState extends State<HomePage>
             children: [
               Expanded(
                 child: Column(
-              children: [
-                AppBar(
-                  elevation: 0,
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                  actions: [
-                    Stack(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.warning_amber_outlined,
-                              color: Colors.orange),
-                          onPressed: _openStockPage,
-                        ),
-                        if (_stockBasCount > 0)
-                          Positioned(
-                            right: 6,
-                            top: 6,
-                            child: Container(
-                              padding: const EdgeInsets.all(2),
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                              ),
-                              constraints:
-                                  const BoxConstraints(minWidth: 16, minHeight: 16),
-                              child: Text(
-                                '$_stockBasCount',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
+                  children: [
+                    AppBar(
+                      elevation: 0,
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      actions: [
+                        Stack(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.warning_amber_outlined,
+                                  color: Colors.orange),
+                              onPressed: _openStockPage,
                             ),
-                          ),
+                            if (_stockBasCount > 0)
+                              Positioned(
+                                right: 6,
+                                top: 6,
+                                child: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                      minWidth: 16, minHeight: 16),
+                                  child: Text(
+                                    '$_stockBasCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.analytics),
+                          tooltip: 'Résumé des ventes',
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/seller-summary');
+                          },
+                        ),
+                        FutureBuilder<Map<String, dynamic>>(
+                          future: _getCurrentUser(),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) return SizedBox();
+
+                            return Row(
+                              children: [
+                                Text(
+                                  snapshot.data?['name'] ?? '',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                                PopupMenuButton(
+                                  icon: CircleAvatar(
+                                    radius: 15,
+                                    backgroundColor: Colors.blue.shade800,
+                                    child: Text(
+                                      (snapshot.data?['name'] as String?)
+                                              ?.substring(0, 1)
+                                              .toUpperCase() ??
+                                          'U',
+                                    ),
+                                  ),
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      child: ListTile(
+                                        leading: Icon(Icons.logout),
+                                        title: Text('Déconnexion'),
+                                      ),
+                                      onTap: _handleLogout,
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(width: 16),
+                              ],
+                            );
+                          },
+                        ),
                       ],
                     ),
-                    FutureBuilder<Map<String, dynamic>>(
-                      future: _getCurrentUser(),
-                      builder: (context, snapshot) {
-                        if (!snapshot.hasData) return SizedBox();
-
-                        return Row(
-                          children: [
-                            Text(
-                              snapshot.data?['name'] ?? '',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            PopupMenuButton(
-                              icon: CircleAvatar(
-                                radius: 15,
-                                backgroundColor: Colors.blue.shade800,
-                                child: Text(
-                                  (snapshot.data?['name'] as String?)
-                                          ?.substring(0, 1)
-                                          .toUpperCase() ??
-                                      'U',
-                                ),
-                              ),
-                              itemBuilder: (context) => [
-                                PopupMenuItem(
-                                  child: ListTile(
-                                    leading: Icon(Icons.logout),
-                                    title: Text('Déconnexion'),
-                                  ),
-                                  onTap: _handleLogout,
-                                ),
-                              ],
-                            ),
-                            SizedBox(width: 16),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: _loadData,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            margin: EdgeInsets.only(bottom: 24),
-                            child: Row(
-                              children: [
-                                _buildStatsCardWrapper(
-                                  child: StatsCard(
-                                    title: 'Ventes du jour',
-                                    value:
-                                        '€${_totalVentesJour.toStringAsFixed(2)}',
-                                    icon: Icons.euro,
-                                    color: Colors.green,
-                                  ),
-                                ),
-                                SizedBox(width: 24),
-                                _buildStatsCardWrapper(
-                                  child: StatsCard(
-                                    title: 'Commandes',
-                                    value: _nombreCommandes.toString(),
-                                    icon: Icons.receipt_long,
-                                    color: Colors.blue,
-                                    subtitle:
-                                        'Total des commandes', // Ajout d'un sous-titre explicatif
-                                  ),
-                                ),
-                                SizedBox(width: 24),
-                                _buildStatsCardWrapper(
-                                  child: StatsCard(
-                                    title: 'Stock bas',
-                                    value: '$_stockBasCount alertes',
-                                    icon: Icons.warning,
-                                    color: Colors.orange,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            margin: EdgeInsets.only(bottom: 32),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                _buildActionButton(
-                                  'Nouvelle commande',
-                                  Icons.add_shopping_cart,
-                                  Colors.blue,
-                                  onPressed: () => _goToNewCommande(context),
-                                ),
-                                SizedBox(width: 16),
-                                _buildActionButton(
-                                  'Paiement rapide',
-                                  Icons.payment,
-                                  Colors.green,
-                                  onPressed: _showPaiementRapideModal,
-                                ),
-                                SizedBox(width: 16),
-                                _buildActionButton(
-                                  'Dernière facture',
-                                  Icons.receipt,
-                                  Colors.orange,
-                                  onPressed: _showDernierRecu,
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (_ventesData.isNotEmpty)
-                            Container(
-                              margin: EdgeInsets.only(bottom: 24),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 10,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(24.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                    Expanded(
+                      child: RefreshIndicator(
+                        onRefresh: _loadData,
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                margin: EdgeInsets.only(bottom: 24),
+                                child: Row(
                                   children: [
-                                    Text(
-                                      'Ventes (7 derniers jours)',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleLarge,
+                                    _buildStatsCardWrapper(
+                                      child: StatsCard(
+                                        title: 'Ventes du jour',
+                                        value:
+                                            '€${_totalVentesJour.toStringAsFixed(2)}',
+                                        icon: Icons.euro,
+                                        color: Colors.green,
+                                      ),
                                     ),
-                                    SizedBox(height: 24),
-                                    Container(
-                                      height: 200,
-                                      child: LineChart(
-                                        LineChartData(
-                                          minY: 0,
-                                          gridData: FlGridData(show: true),
-                                          titlesData: FlTitlesData(
-                                            show: true,
-                                            rightTitles: AxisTitles(
-                                                sideTitles: SideTitles(
-                                                    showTitles: false)),
-                                            topTitles: AxisTitles(
-                                                sideTitles: SideTitles(
-                                                    showTitles: false)),
-                                          ),
-                                          borderData: FlBorderData(show: true),
-                                          lineBarsData: [
-                                            LineChartBarData(
-                                              spots: _ventesData,
-                                              isCurved: true,
-                                              color: Colors.blue,
-                                              barWidth: 3,
-                                              dotData: FlDotData(show: true),
-                                            ),
-                                          ],
-                                        ),
+                                    SizedBox(width: 24),
+                                    _buildStatsCardWrapper(
+                                      child: StatsCard(
+                                        title: 'Commandes',
+                                        value: _nombreCommandes.toString(),
+                                        icon: Icons.receipt_long,
+                                        color: Colors.blue,
+                                        subtitle:
+                                            'Total des commandes', // Ajout d'un sous-titre explicatif
+                                      ),
+                                    ),
+                                    SizedBox(width: 24),
+                                    _buildStatsCardWrapper(
+                                      child: StatsCard(
+                                        title: 'Stock bas',
+                                        value: '$_stockBasCount alertes',
+                                        icon: Icons.warning,
+                                        color: Colors.orange,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                            ),
-                          if (_dernieresCommandes.isNotEmpty)
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 10,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
+                              Container(
+                                margin: EdgeInsets.only(bottom: 32),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    _buildActionButton(
+                                      'Nouvelle commande',
+                                      Icons.add_shopping_cart,
+                                      Colors.blue,
+                                      onPressed: () =>
+                                          _goToNewCommande(context),
+                                    ),
+                                    SizedBox(width: 16),
+                                    _buildActionButton(
+                                      'Paiement rapide',
+                                      Icons.payment,
+                                      Colors.green,
+                                      onPressed: _showPaiementRapideModal,
+                                    ),
+                                    SizedBox(width: 16),
+                                    _buildActionButton(
+                                      'Dernière facture',
+                                      Icons.receipt,
+                                      Colors.orange,
+                                      onPressed: _showDernierRecu,
+                                    ),
+                                  ],
+                                ),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
+                              if (_ventesData.isNotEmpty)
+                                Container(
+                                  margin: EdgeInsets.only(bottom: 24),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 10,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Padding(
                                     padding: const EdgeInsets.all(24.0),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          'Dernières commandes',
+                                          'Ventes (7 derniers jours)',
                                           style: Theme.of(context)
                                               .textTheme
                                               .titleLarge,
                                         ),
-                                        TextButton(
-                                          onPressed: () {
-                                            // Navigation vers la page des commandes
-                                          },
-                                          child: Text('Voir tout'),
+                                        SizedBox(height: 24),
+                                        Container(
+                                          height: 200,
+                                          child: LineChart(
+                                            LineChartData(
+                                              minY: 0,
+                                              gridData: FlGridData(show: true),
+                                              titlesData: FlTitlesData(
+                                                show: true,
+                                                rightTitles: AxisTitles(
+                                                    sideTitles: SideTitles(
+                                                        showTitles: false)),
+                                                topTitles: AxisTitles(
+                                                    sideTitles: SideTitles(
+                                                        showTitles: false)),
+                                              ),
+                                              borderData:
+                                                  FlBorderData(show: true),
+                                              lineBarsData: [
+                                                LineChartBarData(
+                                                  spots: _ventesData,
+                                                  isCurved: true,
+                                                  color: Colors.blue,
+                                                  barWidth: 3,
+                                                  dotData:
+                                                      FlDotData(show: true),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),
                                   ),
-                                  ..._dernieresCommandes.map((commande) {
-                                    // Formatage sécurisé de la date
-                                    String formattedTime;
-                                    try {
-                                      final dateTime = DateTime.parse(
-                                          commande['date'].toString());
-                                      formattedTime =
-                                          '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
-                                    } catch (e) {
-                                      formattedTime = 'N/A';
-                                    }
+                                ),
+                              if (_dernieresCommandes.isNotEmpty)
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.05),
+                                        blurRadius: 10,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(24.0),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              'Dernières commandes',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleLarge,
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                // Navigation vers la page des commandes
+                                              },
+                                              child: Text('Voir tout'),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      ..._dernieresCommandes.map((commande) {
+                                        // Formatage sécurisé de la date
+                                        String formattedTime;
+                                        try {
+                                          final dateTime = DateTime.parse(
+                                              commande['date'].toString());
+                                          formattedTime =
+                                              '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+                                        } catch (e) {
+                                          formattedTime = 'N/A';
+                                        }
 
-                                    return OrderListItem(
-                                      orderNumber:
-                                          'CMD${commande['id'].toString().padLeft(6, '0')}',
-                                      time: formattedTime,
-                                      amount:
-                                          (commande['total'] as num).toDouble(),
-                                      clientName:
-                                          commande['client_nom'] as String?,
-                                    );
-                                  }),
-                                ],
-                              ),
-                            ),
-                        ],
+                                        return OrderListItem(
+                                          orderNumber:
+                                              'CMD${commande['id'].toString().padLeft(6, '0')}',
+                                          time: formattedTime,
+                                          amount: (commande['total'] as num)
+                                              .toDouble(),
+                                          clientName:
+                                              commande['client_nom'] as String?,
+                                        );
+                                      }),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+          if (_showStockAlert)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: SlideTransition(
+                position: _alertAnimation,
+                child: LowStockNotification(
+                  count: _stockBasCount,
+                  onClose: () => setState(() => _showStockAlert = false),
+                  onTap: _openStockPage,
+                ),
+              ),
+            ),
         ],
       ),
-      if (_showStockAlert)
-        Positioned(
-          top: 16,
-          right: 16,
-          child: SlideTransition(
-            position: _alertAnimation,
-            child: LowStockNotification(
-              count: _stockBasCount,
-              onClose: () => setState(() => _showStockAlert = false),
-              onTap: _openStockPage,
-            ),
-          ),
-        ),
-    ],
-  ),
-);
+    );
   }
 
   Widget _buildStatsCardWrapper({required Widget child}) {

@@ -17,9 +17,12 @@ class SellerSummaryService {
     final totalClients = stats['nombre_clients'] as int? ?? 0;
 
     final previousStats = await DatabaseTools.getStatistiquesJour(
-        DateFormat('yyyy-MM-dd').format(date.subtract(const Duration(days: 1))));
-    final prevSales = (previousStats['total_ventes'] as num?)?.toDouble() ?? 0.0;
-    final variation = prevSales == 0 ? 0 : ((totalSales - prevSales) / prevSales) * 100;
+        DateFormat('yyyy-MM-dd')
+            .format(date.subtract(const Duration(days: 1))));
+    final prevSales =
+        (previousStats['total_ventes'] as num?)?.toDouble() ?? 0.0;
+    final variation =
+        prevSales == 0 ? 0 : ((totalSales - prevSales) / prevSales) * 100;
 
     final bestSeller = await DatabaseTools.executeQuery('''
       SELECT p.nom, SUM(cp.quantite) as qty
@@ -31,7 +34,8 @@ class SellerSummaryService {
       ORDER BY qty DESC
       LIMIT 1
     ''', [dateStr]);
-    final topProductByQuantity = bestSeller.isNotEmpty ? bestSeller.first['nom'] as String : '-';
+    final topProductByQuantity =
+        bestSeller.isNotEmpty ? bestSeller.first['nom'] as String : '-';
 
     final bestRevenue = await DatabaseTools.executeQuery('''
       SELECT p.nom, SUM(cp.quantite * cp.prixUnitaire) as total
@@ -43,7 +47,8 @@ class SellerSummaryService {
       ORDER BY total DESC
       LIMIT 1
     ''', [dateStr]);
-    final topProductByRevenue = bestRevenue.isNotEmpty ? bestRevenue.first['nom'] as String : '-';
+    final topProductByRevenue =
+        bestRevenue.isNotEmpty ? bestRevenue.first['nom'] as String : '-';
 
     final hours = await DatabaseTools.executeQuery('''
       SELECT strftime('%H', c.date) as hour, COUNT(*) as cnt
@@ -60,7 +65,8 @@ class SellerSummaryService {
     final lowStock = await DatabaseTools.executeQuery('''
       SELECT nom FROM produits WHERE stock <= seuilAlerte AND actif = 1
     ''');
-    final stockAlerts = lowStock.map((e) => e['nom'] as String).take(3).toList();
+    final stockAlerts =
+        lowStock.map((e) => e['nom'] as String).take(3).toList();
 
     final prompt = '''
 Génère des conseils pour améliorer les ventes demain en te basant sur :
@@ -70,7 +76,8 @@ Génère des conseils pour améliorer les ventes demain en te basant sur :
 Réponds par une liste de 2 à 3 phrases courtes.
 ''';
     final suggestionResp = await gemini.decideTool(prompt, []);
-    final suggestions = (suggestionResp['answer'] as String?)?.split('\n') ?? [];
+    final suggestions =
+        (suggestionResp['answer'] as String?)?.split('\n') ?? [];
 
     final motivPrompt = '''
 Écris un court message de motivation pour un vendeur.
@@ -87,8 +94,8 @@ Variation par rapport à hier: ${variation.toStringAsFixed(1)}%.
       peakHour: peakHour,
       topProductByQuantity: topProductByQuantity,
       topProductByRevenue: topProductByRevenue,
-      averageBasket: averageBasket,
-      variationSinceYesterday: variation,
+      averageBasket: averageBasket.toDouble(),
+      variationSinceYesterday: variation.toDouble(),
       suggestions: suggestions,
       stockAlerts: stockAlerts,
       motivationalMessage: motivational,
