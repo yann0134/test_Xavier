@@ -129,6 +129,17 @@ class DBHelper {
       )
     ''');
 
+    // Table pour tracer les suppressions/annulations de commandes
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS deleted_sales (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        seller_id INTEGER,
+        deleted_at TEXT,
+        sale_value REAL,
+        reason TEXT
+      )
+    ''');
+
     // Utilisateurs (pour contrôle d'accès)
     await db.execute('''
       CREATE TABLE utilisateurs (

@@ -9,6 +9,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:excel/excel.dart';
 import 'package:open_file/open_file.dart';
 import '../../ai_agent/gemini_service.dart';
+import '../../services/anomaly_detection_service.dart';
+import '../../models/anomaly.dart';
 
 class RapportPage extends StatefulWidget {
   @override
@@ -34,12 +36,15 @@ class _RapportPageState extends State<RapportPage> {
   DateTime _dateDebut = DateTime.now().subtract(Duration(days: 7));
   DateTime _dateFin = DateTime.now();
   Map<String, dynamic> _aiSummary = {};
+  final _anomalyService = AnomalyDetectionService();
+  List<Anomaly> _anomalies = [];
 
   @override
   void initState() {
     super.initState();
     _loadData();
     _generateAISummary();
+    _loadAnomalies();
   }
 
   Future<void> _loadData() async {
@@ -163,6 +168,7 @@ class _RapportPageState extends State<RapportPage> {
             'Stock normal': _safeParseInt(stockStats[2].first['count']),
           };
         });
+        _loadAnomalies();
       }
     } catch (e, stack) {
       print('Erreur lors du chargement des données: $e');
@@ -193,6 +199,15 @@ class _RapportPageState extends State<RapportPage> {
     } catch (e) {
       print('Erreur lors de la génération du résumé IA: $e');
     }
+  }
+
+  Future<void> _loadAnomalies() async {
+    final results =
+        await _anomalyService.detect(_dateDebut, _dateFin);
+    if (!mounted) return;
+    setState(() {
+      _anomalies = results;
+    });
   }
 
   // Méthodes utilitaires pour la conversion sécurisée
@@ -271,6 +286,7 @@ class _RapportPageState extends State<RapportPage> {
         _dateFin = picked.end;
       });
       _loadData();
+      _loadAnomalies();
     }
   }
 
@@ -585,6 +601,8 @@ class _RapportPageState extends State<RapportPage> {
                           ),
                           SizedBox(height: 24),
                           _buildAISummarySection(),
+                          SizedBox(height: 24),
+                          _buildAnomalySection(),
                         ],
                       ),
                     ),
@@ -1066,6 +1084,82 @@ class _RapportPageState extends State<RapportPage> {
               color: Colors.grey[700],
               height: 1.5,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAnomalySection() {
+    if (_anomalies.isEmpty) {
+      return SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Anomalies détectées (IA)',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        SizedBox(height: 16),
+        ..._anomalies.map(_buildAnomalyCard).toList(),
+      ],
+    );
+  }
+
+  Widget _buildAnomalyCard(Anomaly anomaly) {
+    Color color;
+    switch (anomaly.severity) {
+      case 'critical':
+        color = Colors.red;
+        break;
+      case 'moderate':
+        color = Colors.orange;
+        break;
+      default:
+        color = Colors.green;
+    }
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12),
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        border: Border.all(color: color),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.warning, color: color),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  anomaly.description,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                ),
+              ),
+              Text(
+                _formatDate(anomaly.detectedAt),
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          Text(
+            anomaly.comparison,
+            style: TextStyle(color: Colors.grey[700]),
+          ),
+          SizedBox(height: 4),
+          Text(
+            anomaly.recommendation,
+            style: TextStyle(color: Colors.grey[700]),
           ),
         ],
       ),
