@@ -1,3 +1,4 @@
+import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../services/db_helper.dart';
@@ -7,6 +8,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:excel/excel.dart';
 import 'package:open_file/open_file.dart';
+import '../../ai_agent/gemini_service.dart';
 
 class RapportPage extends StatefulWidget {
   @override
@@ -15,6 +17,7 @@ class RapportPage extends StatefulWidget {
 
 class _RapportPageState extends State<RapportPage> {
   final _dbHelper = DBHelper();
+  final _gemini = GeminiService(apiKey: 'YOUR_API_KEY');
 
   Map<String, dynamic> _stats = {
     'chiffreAffaires': 0.0,
@@ -30,11 +33,13 @@ class _RapportPageState extends State<RapportPage> {
   Map<String, int> _stockStatus = {};
   DateTime _dateDebut = DateTime.now().subtract(Duration(days: 7));
   DateTime _dateFin = DateTime.now();
+  Map<String, dynamic> _aiSummary = {};
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _generateAISummary();
   }
 
   Future<void> _loadData() async {
@@ -163,6 +168,30 @@ class _RapportPageState extends State<RapportPage> {
       print('Erreur lors du chargement des données: $e');
       print('Stack trace: $stack');
       _setDefaultValues();
+    }
+  }
+
+  Future<void> _generateAISummary() async {
+    try {
+      final summary = await _gemini.analyzeBusinessDay({
+        'chiffreAffaires': _stats['chiffreAffaires'],
+        'nombreCommandes': _stats['nombreCommandes'],
+        'panierMoyen': _stats['panierMoyen'],
+        'evolution': {
+          'ca': _stats['pourcentageCA'],
+          'commandes': _stats['pourcentageCommandes'],
+          'panier': _stats['pourcentagePanier'],
+        },
+        'topProduits': _topProduits,
+        'paiements': _paiements,
+        'stockStatus': _stockStatus,
+      });
+
+      setState(() {
+        _aiSummary = summary;
+      });
+    } catch (e) {
+      print('Erreur lors de la génération du résumé IA: $e');
     }
   }
 
@@ -542,15 +571,21 @@ class _RapportPageState extends State<RapportPage> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Graphique des ventes
+                    // Graphique des ventes et analyse IA
                     Expanded(
                       flex: 2,
-                      child: _buildChartCard(
-                        'Ventes par jour',
-                        SizedBox(
-                          height: 300,
-                          child: LineChart(_createLineChartData()),
-                        ),
+                      child: Column(
+                        children: [
+                          _buildChartCard(
+                            'Ventes par jour',
+                            SizedBox(
+                              height: 300,
+                              child: LineChart(_createLineChartData()),
+                            ),
+                          ),
+                          SizedBox(height: 24),
+                          _buildAISummarySection(),
+                        ],
                       ),
                     ),
                     SizedBox(width: 24),
@@ -916,6 +951,124 @@ class _RapportPageState extends State<RapportPage> {
           dotData: FlDotData(show: true),
         ),
       ],
+    );
+  }
+
+  Widget _buildAISummarySection() {
+    if (_aiSummary.isEmpty) {
+      return SizedBox.shrink();
+    }
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 24),
+      padding: EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.blue.shade50,
+            Colors.white,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome, color: Colors.blue.shade700),
+              SizedBox(width: 12),
+              Text(
+                'Analyse IA de la journée',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 24),
+          // Performance générale
+          _buildAISummaryCard(
+            'Performance',
+            _aiSummary['performance'] ?? '',
+            Icons.insights,
+            Colors.blue,
+          ),
+          SizedBox(height: 16),
+          // Points d'attention
+          _buildAISummaryCard(
+            'Points d\'attention',
+            _aiSummary['alerts'] ?? '',
+            Icons.warning_amber,
+            Colors.orange,
+          ),
+          SizedBox(height: 16),
+          // Opportunités
+          _buildAISummaryCard(
+            'Opportunités',
+            _aiSummary['opportunities'] ?? '',
+            Icons.trending_up,
+            Colors.green,
+          ),
+          SizedBox(height: 16),
+          // Recommandations
+          _buildAISummaryCard(
+            'Recommandations',
+            _aiSummary['recommendations'] ?? '',
+            Icons.lightbulb,
+            Colors.purple,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAISummaryCard(
+      String title, String content, IconData icon, Color color) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 20),
+              SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          Text(
+            content,
+            style: TextStyle(
+              color: Colors.grey[700],
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

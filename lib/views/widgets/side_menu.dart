@@ -152,14 +152,6 @@ class SideMenu extends StatelessWidget {
                         );
                       }).toList(),
                       Divider(height: 32),
-                      _buildMenuItem(
-                        context: context,
-                        icon: Icons.brightness_4,
-                        title: 'dark_theme'.tr,
-                        index: 7,
-                        isSelected: model.currentIndex == 7,
-                        model: model,
-                      ),
                     ],
                   ),
                 ),

@@ -15,7 +15,6 @@ import '../assistant/assistant_chat_overlay.dart';
 import '../widgets/daily_objective_widget.dart';
 import '../../localization/app_localizations.dart';
 import '../../services/auth_service.dart';
-import '../analysis/ia_sales_analysis_page.dart';
 
 class MainLayout extends StatefulWidget {
   final int selectedIndex;
@@ -41,6 +40,7 @@ class _MainLayoutState extends State<MainLayout> {
   Future<void> _loadRole() async {
     final user = await AuthService().getCurrentUser();
     setState(() {
+      print("User role loaded: ${user['role']}");
       _role = user['role'] as String?;
     });
   }
@@ -91,16 +91,11 @@ class _MainLayoutState extends State<MainLayout> {
                   selectedIcon: const Icon(Icons.inventory_2),
                   label: Text('products'.tr),
                 ),
-                NavigationRailDestination(
-                  icon: const Icon(Icons.bar_chart_outlined),
-                  selectedIcon: const Icon(Icons.bar_chart),
-                  label: Text('reports'.tr),
-                ),
-                if (_role == 'admin')
+                if (_role == 'Admin')
                   NavigationRailDestination(
-                    icon: const Icon(Icons.insights_outlined),
-                    selectedIcon: const Icon(Icons.insights),
-                    label: const Text('Analyse IA'),
+                    icon: const Icon(Icons.bar_chart_outlined),
+                    selectedIcon: const Icon(Icons.bar_chart),
+                    label: Text('reports'.tr),
                   ),
                 NavigationRailDestination(
                   icon: const Icon(Icons.shopping_cart_outlined),
@@ -123,8 +118,8 @@ class _MainLayoutState extends State<MainLayout> {
                 CommandePage(),
                 HistoriquePage(),
                 ProduitsPage(),
-                RapportPage(),
-                if (_role == 'admin') const IASalesAnalysisPage(),
+                if (_role == 'Admin') RapportPage(),
+                //  if (_role == 'Admin') const IASalesAnalysisPage(),
                 GestionPage(),
                 SettingsPage(),
               ],

@@ -5,7 +5,6 @@ import 'services/auth_service.dart';
 import 'views/assistant/modular_ai_page.dart';
 import 'views/assistant/seller_summary_page.dart';
 import 'views/assistant/daily_objective_page.dart';
-import 'views/analysis/ia_sales_analysis_page.dart';
 
 class AppRoutes {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -39,25 +38,6 @@ class AppRoutes {
 
       case '/daily-objective':
         return MaterialPageRoute(builder: (_) => const DailyObjectivePage());
-
-      case '/ia-analysis':
-        return MaterialPageRoute(
-          builder: (_) => FutureBuilder<Map<String, dynamic>>(
-            future: AuthService().getCurrentUser(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              final role = snapshot.data?['role'] as String?;
-              if (role != 'admin') {
-                return const Scaffold(
-                  body: Center(child: Text('Accès refusé')),
-                );
-              }
-              return const IASalesAnalysisPage();
-            },
-          ),
-        );
 
       default:
         return MaterialPageRoute(builder: (_) => LoginPage());
