@@ -160,6 +160,19 @@ class DBHelper {
       )
     ''');
 
+    // Daily objectives
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS objectives (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        seller_id INTEGER,
+        target_date TEXT,
+        target_sales_amount REAL,
+        target_sales_count INTEGER,
+        generated_by_ai INTEGER DEFAULT 1,
+        generated_at TEXT
+      )
+    ''');
+
     // Unités de mesure
     await db.execute('''
       CREATE TABLE unites (
