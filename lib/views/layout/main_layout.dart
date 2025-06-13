@@ -12,6 +12,7 @@ import '../rapports/rapport_page.dart';
 import '../parametres/settings_page.dart';
 import '../gestion/gestion_page.dart';
 import '../assistant/assistant_chat_overlay.dart';
+import '../widgets/daily_objective_widget.dart';
 import '../../localization/app_localizations.dart';
 
 class MainLayout extends StatefulWidget {
@@ -114,6 +115,7 @@ class _MainLayoutState extends State<MainLayout> {
         ],
       ),
       const AssistantChatOverlay(),
+      const DailyObjectiveWidget(),
     ]));
   }
 }
