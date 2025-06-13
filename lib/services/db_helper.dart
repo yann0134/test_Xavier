@@ -160,6 +160,17 @@ class DBHelper {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS daily_sales_summary (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        summary_date TEXT,
+        total_sales_amount REAL,
+        total_sales_count INTEGER,
+        best_selling_product TEXT,
+        best_selling_product_qty INTEGER
+      )
+    ''');
+
     // Daily objectives
     await db.execute('''
       CREATE TABLE IF NOT EXISTS objectives (
