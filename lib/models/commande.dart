@@ -8,7 +8,6 @@ class Commande extends BaseModel {
   final String status;
   final String typePaiement;
   final String? clientNom;
-  final bool payee;
 
   Commande({
     required this.numero,
@@ -18,7 +17,6 @@ class Commande extends BaseModel {
     required this.typePaiement,
     this.remiseMontant = 0,
     this.clientNom,
-    this.payee = true,
   });
 
   @override
@@ -30,19 +28,53 @@ class Commande extends BaseModel {
         'statut': status,
         'moyenPaiement': typePaiement,
         'client_nom': clientNom,
-        'payee': payee ? 1 : 0,
       };
 
-  factory Commande.fromMap(Map<String, dynamic> map) => Commande(
-        numero: map['id']?.toString() ?? '',
-        date: DateTime.parse(map['date'] as String),
-        montant: (map['total'] as num).toDouble(),
-        status: map['statut'] ?? 'En attente',
-        typePaiement: map['moyenPaiement'] ?? 'Non spécifié',
-        remiseMontant: (map['remise_montant'] ?? 0) is num
-            ? (map['remise_montant'] as num).toDouble()
-            : 0,
-        clientNom: map['client_nom'],
-        payee: map['payee'] == 1,
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
+  }
+
+  factory Commande.fromMap(Map<String, dynamic> map) {
+    try {
+      // Conversion sécurisée pour le numéro
+      String numero = 'CMD${(map['id'] ?? 0).toString().padLeft(6, '0')}';
+
+      // Conversion sécurisée pour la date
+      DateTime date;
+      try {
+        date = DateTime.parse(map['date'] as String);
+      } catch (e) {
+        date = DateTime.now();
+      }
+
+      // Conversion sécurisée pour le montant et la remise
+      final montant = _parseDouble(map['total']);
+      final remiseMontant = _parseDouble(map['remise_montant']);
+
+      return Commande(
+        numero: numero,
+        date: date,
+        montant: montant,
+        status: map['statut'] as String? ?? 'En attente',
+        typePaiement: map['moyenPaiement'] as String? ?? 'Non spécifié',
+        clientNom: map['client_nom'] as String?,
+        remiseMontant: remiseMontant,
       );
+    } catch (e, stack) {
+      print('Erreur Commande.fromMap: $e\n$stack\nmap=$map');
+      return Commande(
+        numero: 'CMD000000',
+        date: DateTime.now(),
+        montant: 0.0,
+        status: 'Erreur',
+        typePaiement: 'Erreur',
+        clientNom: null,
+        remiseMontant: 0.0,
+      );
+    }
+  }
 }

@@ -149,7 +149,8 @@ class _CommandePageState extends State<CommandePage> {
 
     final idsInCart = _panier.map((p) => p['id']).toSet();
     produits = produits
-        .where((p) => !idsInCart.contains(p['id']) && p['id'] != baseProduit?['id'])
+        .where((p) =>
+            !idsInCart.contains(p['id']) && p['id'] != baseProduit?['id'])
         .take(5)
         .toList();
 
@@ -806,72 +807,71 @@ class _CommandePageState extends State<CommandePage> {
   }
 
   Widget _buildSuggestionsBox() {
+    if (_suggestions.isEmpty) return SizedBox.shrink();
+
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.recommend, color: Colors.blue),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Recommandations IA pour compléter la vente',
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                Icon(Icons.lightbulb_outline, color: Colors.amber, size: 16),
+                SizedBox(width: 8),
+                Text(
+                  'Suggestions',
                   style: TextStyle(
-                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[700],
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          SizedBox(height: 8),
-          if (_suggestions.isEmpty)
-            Text('Aucune suggestion pour le moment',
-                style: TextStyle(color: Colors.grey[600]))
-          else
-            Column(
-              children:
-                  _suggestions.map((p) => _buildSuggestionItem(p)).toList(),
-            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _suggestions.map((p) {
+              return InkWell(
+                onTap: () => _addToPanier(p),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.blue.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        p['nom'],
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue[700],
+                        ),
+                      ),
+                      SizedBox(width: 4),
+                      Text(
+                        '€${(p['prix'] as double).toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSuggestionItem(Map<String, dynamic> produit) {
-    final badges = [
-      'Fréquemment acheté ensemble',
-      'Haute marge',
-      'Meilleur choix client'
-    ];
-    final badge = badges[produit['id'] % badges.length];
-    return Card(
-      margin: EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: Icon(Icons.local_offer, color: Colors.grey[700]),
-        title: Text(produit['nom'], maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: Text(badge),
-        trailing: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('€${(produit['prix'] as double).toStringAsFixed(2)}'),
-            SizedBox(height: 4),
-            ElevatedButton(
-              onPressed: () => _addToPanier(produit),
-              child: Text('Ajouter'),
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

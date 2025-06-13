@@ -1,3 +1,4 @@
+import 'package:caissepro/config/api_keys.dart';
 import 'package:flutter/material.dart';
 import '../../models/produit.dart';
 import '../../services/db_helper.dart';
@@ -5,6 +6,11 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProduitsPage extends StatefulWidget {
   @override
@@ -13,6 +19,7 @@ class ProduitsPage extends StatefulWidget {
 
 class _ProduitsPageState extends State<ProduitsPage> {
   final _dbHelper = DBHelper();
+  final ImagePicker _picker = ImagePicker();
 
   List<Map<String, dynamic>> _produits = [];
   List<Map<String, dynamic>> _categories = [];
@@ -30,6 +37,11 @@ class _ProduitsPageState extends State<ProduitsPage> {
   final TextEditingController stockController = TextEditingController();
   final TextEditingController seuilController = TextEditingController();
   final TextEditingController codeBarreController = TextEditingController();
+
+  String? _selectedImageUrl;
+  String? _productImagePath;
+  bool _isLoadingImages = false;
+  List<String> _suggestedImages = [];
 
   @override
   void initState() {
@@ -189,6 +201,97 @@ class _ProduitsPageState extends State<ProduitsPage> {
           content: Text('Erreur lors de l\'export: $e'),
           backgroundColor: Colors.red,
         ),
+      );
+    }
+  }
+
+  Future<List<String>> _searchProductImages(String query) async {
+    try {
+      final model = GenerativeModel(
+        model: 'gemini-1.5-flash',
+        apiKey: ApiKeys.geminiApiKey,
+      );
+
+      final prompt = '''
+        Recherche des images qui correspondent à ce produit: "$query"
+        Format de réponse souhaité: uniquement des URLs d'images, une par ligne
+        Type d'images: produit commercial, bonne qualité
+        Nombre d'images: 10 maximum
+      ''';
+
+      final response = await model.generateContent([Content.text(prompt)]);
+      final urls = response.text?.split('\n') ?? [];
+      print("url = $urls");
+      // Filtrer pour ne garder que les URLs valides
+      return urls
+          .where((url) =>
+              url.trim().startsWith('http') &&
+              (url.endsWith('.jpg') ||
+                  url.endsWith('.png') ||
+                  url.endsWith('.jpeg')))
+          .take(9)
+          .toList();
+    } catch (e) {
+      print('Erreur lors de la recherche d\'images: $e');
+      return [];
+    }
+  }
+
+  Future<void> _downloadAndSaveImage(
+      String imageUrl, String productName) async {
+    try {
+      final response = await http.get(Uri.parse(imageUrl));
+      final documentsDir = await getApplicationDocumentsDirectory();
+      final fileName = 'product_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final filePath = '${documentsDir.path}/products/$fileName';
+
+      // Créer le dossier products s'il n'existe pas
+      final directory = Directory('${documentsDir.path}/products');
+      if (!await directory.exists()) {
+        await directory.create(recursive: true);
+      }
+
+      // Sauvegarder l'image
+      final file = File(filePath);
+      await file.writeAsBytes(response.bodyBytes);
+
+      setState(() {
+        _productImagePath = filePath;
+      });
+    } catch (e) {
+      print('Erreur lors du téléchargement de l\'image: $e');
+    }
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+      );
+
+      if (image != null) {
+        final String fileName =
+            'product_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final Directory documentsDir = await getApplicationDocumentsDirectory();
+        final String filePath = '${documentsDir.path}/products/$fileName';
+
+        // Créer le dossier products s'il n'existe pas
+        final directory = Directory('${documentsDir.path}/products');
+        if (!await directory.exists()) {
+          await directory.create(recursive: true);
+        }
+
+        // Copier l'image vers le dossier de l'application
+        await File(image.path).copy(filePath);
+
+        setState(() {
+          _productImagePath = filePath;
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors de la sélection de l\'image: $e')),
       );
     }
   }
@@ -599,30 +702,7 @@ class _ProduitsPageState extends State<ProduitsPage> {
                               ),
                               SizedBox(width: 24),
                               Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildSectionTitle('Image', Icons.image),
-                                    SizedBox(height: 16),
-                                    Container(
-                                      height: 120,
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                            color: Colors.grey.shade300),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Center(
-                                        child: IconButton(
-                                          icon: Icon(
-                                              Icons
-                                                  .add_photo_alternate_outlined,
-                                              size: 32),
-                                          onPressed: _pickImage,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                child: _buildImageSection(setDialogState),
                               ),
                             ],
                           ),
@@ -701,6 +781,7 @@ class _ProduitsPageState extends State<ProduitsPage> {
           'seuilAlerte': seuilController.text.isNotEmpty
               ? int.parse(seuilController.text)
               : 5,
+          'imagePath': _productImagePath,
         },
         where: 'id = ?',
         whereArgs: [id],
@@ -1147,6 +1228,7 @@ class _ProduitsPageState extends State<ProduitsPage> {
         'seuilAlerte': seuilController.text.isNotEmpty
             ? int.parse(seuilController.text)
             : 5,
+        'imagePath': _productImagePath,
         'actif': 1,
       });
 
@@ -1170,13 +1252,6 @@ class _ProduitsPageState extends State<ProduitsPage> {
     );
   }
 
-  Future<void> _pickImage() async {
-    // TODO: Implémenter la sélection d'image
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Sélection d\'image à implémenter')),
-    );
-  }
-
   void _resetForm() {
     nomController.clear();
     prixController.clear();
@@ -1185,6 +1260,7 @@ class _ProduitsPageState extends State<ProduitsPage> {
     codeBarreController.clear();
     setState(() {
       _selectedCategory = null;
+      _productImagePath = null;
     });
   }
 
@@ -1214,6 +1290,76 @@ class _ProduitsPageState extends State<ProduitsPage> {
             fontWeight: FontWeight.bold,
             color: Colors.blue,
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImageSection(StateSetter setDialogState) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('Image', Icons.image),
+        SizedBox(height: 16),
+        Container(
+          height: 200,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: _productImagePath != null
+              ? Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        File(_productImagePath!),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: IconButton(
+                        icon: Icon(Icons.close, color: Colors.white),
+                        onPressed: () {
+                          setDialogState(() {
+                            _productImagePath = null;
+                          });
+                        },
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all(
+                            Colors.black54,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Ajouter une image',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 16,
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        icon: Icon(Icons.photo_library),
+                        label: Text('Sélectionner depuis la galerie'),
+                        onPressed: () async {
+                          await _pickImage();
+                          setDialogState(() {});
+                        },
+                      ),
+                    ],
+                  ),
+                ),
         ),
       ],
     );

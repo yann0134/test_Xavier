@@ -73,6 +73,7 @@ class ReceiptView extends StatelessWidget {
                       }
 
                       if (snapshot.hasError || !snapshot.hasData) {
+                        print(" snapshot ${snapshot}");
                         return Padding(
                           padding: EdgeInsets.all(24),
                           child: Text('Erreur de chargement'),
@@ -272,6 +273,10 @@ class ReceiptView extends StatelessWidget {
   Future<Map<String, dynamic>> _loadCommandeDetails() async {
     final db = await DBHelper.database;
 
+    // Extraire l'ID numérique de la commande (ex: "CMD000002" -> 2)
+    final idStr = commande.numero.replaceAll(RegExp(r'[^\d]'), '');
+    final id = int.tryParse(idStr) ?? 0;
+
     // Charger les détails de la commande
     final details = await db.rawQuery('''
       SELECT 
@@ -282,7 +287,7 @@ class ReceiptView extends StatelessWidget {
       FROM commandes c
       LEFT JOIN clients cl ON c.clientId = cl.id
       WHERE c.id = ?
-    ''', [int.parse(commande.numero)]);
+    ''', [id]);
 
     // Charger les articles de la commande
     final items = await db.rawQuery('''
@@ -293,7 +298,7 @@ class ReceiptView extends StatelessWidget {
       FROM commande_produits cp
       JOIN produits p ON cp.produitId = p.id
       WHERE cp.commandeId = ?
-    ''', [int.parse(commande.numero)]);
+    ''', [id]);
 
     if (details.isEmpty) {
       throw Exception('Commande non trouvée');
