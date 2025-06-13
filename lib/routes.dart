@@ -3,6 +3,7 @@ import 'views/layout/main_layout.dart';
 import 'views/auth/login_page.dart';
 import 'services/auth_service.dart';
 import 'views/assistant/modular_ai_page.dart';
+import 'views/assistant/seller_summary_page.dart';
 
 class AppRoutes {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -30,6 +31,9 @@ class AppRoutes {
 
       case '/assistant':
         return MaterialPageRoute(builder: (_) => ModularAIPage());
+
+      case '/seller-summary':
+        return MaterialPageRoute(builder: (_) => const SellerSummaryPage());
 
       default:
         return MaterialPageRoute(builder: (_) => LoginPage());
