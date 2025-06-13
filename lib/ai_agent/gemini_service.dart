@@ -37,35 +37,28 @@ Query: "$query"''';
 
   Future<Map<String, dynamic>> analyzeBusinessDay(
       Map<String, dynamic> data) async {
-    final prompt =
-        '''Analyze this business data with a focus on cashier performance:
-Sales data: ${jsonEncode(data)}
+    final prompt = '''
+Analyse ces données d'activité en te concentrant sur la performance des caissiers.
+Données de ventes : ${jsonEncode(data)}
 
-Respond with a JSON object containing these fields:
+Réponds uniquement avec un objet JSON contenant les champs suivants :
 {
-  "performance": "Overall business performance analysis",
-  "alerts": "Important points requiring attention",
-  "opportunities": "Business opportunities identified",
-  "recommendations": "Actionable recommendations",
+  "performance": "Analyse globale de la performance",
+  "alerts": "Points importants nécessitant une attention",
+  "opportunities": "Opportunités identifiées",
+  "recommendations": "Recommandations concrètes",
   "cashierAnalysis": [
     {
-      "name": "Cashier name",
-      "rating": "Performance rating (1-5)",
-      "strengths": "Key strengths of this cashier",
-      "areas_for_improvement": "Areas where improvement is needed",
-      "recommendations": "Specific recommendations for this cashier"
+      "name": "Nom du caissier",
+      "rating": "Note de performance (1-5)",
+      "strengths": "Forces de ce caissier",
+      "areas_for_improvement": "Points à améliorer",
+      "recommendations": "Recommandations spécifiques"
     }
   ]
 }
 
-When analyzing cashiers, consider:
-1. Sales volume and average basket
-2. Number of unique customers
-3. Customer retention patterns
-4. Speed and efficiency
-5. Compare to team averages
-
-Make it professional and constructive.''';
+Exprime-toi en français de manière naturelle et professionnelle, sans mentionner l'origine automatique de l'analyse.''';
 
     try {
       final response = await _model.generateContent([Content.text(prompt)]);
