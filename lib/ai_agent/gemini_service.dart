@@ -1,15 +1,24 @@
 import 'dart:convert';
 import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:excel/excel.dart' as excel;
+import '../config/api_keys.dart';
 
 class GeminiService {
-  final GenerativeModel _model;
+  static final GeminiService _instance = GeminiService._internal();
+  static late final GenerativeModel _model;
+  static bool _initialized = false;
 
-  GeminiService({required String apiKey})
-      : _model = GenerativeModel(
-          model: 'gemini-1.5-flash-latest',
-          apiKey: apiKey,
-        );
+  factory GeminiService({String? apiKey}) {
+    if (!_initialized) {
+      _model = GenerativeModel(
+        model: 'gemini-1.5-flash-latest',
+        apiKey: apiKey ?? ApiKeys.geminiApiKey,
+      );
+      _initialized = true;
+    }
+    return _instance;
+  }
+
+  GeminiService._internal();
 
   Future<Map<String, dynamic>> decideTool(
       String query, List<String> availableTools) async {

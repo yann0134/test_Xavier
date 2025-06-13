@@ -1,3 +1,4 @@
+import 'package:caissepro/config/api_keys.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -17,12 +18,11 @@ class _SellerSummaryPageState extends State<SellerSummaryPage> {
   SellerSummary? summary;
   bool loading = true;
   final currencyFormat = NumberFormat.currency(locale: 'fr_FR', symbol: '€');
+  final gemini = GeminiService(apiKey: ApiKeys.geminiApiKey);
 
   @override
   void initState() {
     super.initState();
-    final gemini =
-        GeminiService(apiKey: 'AIzaSyCCVre0MdH35vty9lRbqQ0FglYKPt8KQ9c');
     service = SellerSummaryService(gemini);
     _loadSummary();
   }

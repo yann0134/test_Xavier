@@ -202,8 +202,7 @@ class _RapportPageState extends State<RapportPage> {
   }
 
   Future<void> _loadAnomalies() async {
-    final results =
-        await _anomalyService.detect(_dateDebut, _dateFin);
+    final results = await _anomalyService.detect(_dateDebut, _dateFin);
     if (!mounted) return;
     setState(() {
       _anomalies = results;
@@ -1126,7 +1125,7 @@ class _RapportPageState extends State<RapportPage> {
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(0.05),
-        border: Border.all(color: color),
+        //    border: Border.all(color: color),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
