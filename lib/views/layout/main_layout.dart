@@ -14,6 +14,8 @@ import '../gestion/gestion_page.dart';
 import '../assistant/assistant_chat_overlay.dart';
 import '../widgets/daily_objective_widget.dart';
 import '../../localization/app_localizations.dart';
+import '../../services/auth_service.dart';
+import '../analysis/ia_sales_analysis_page.dart';
 
 class MainLayout extends StatefulWidget {
   final int selectedIndex;
@@ -27,11 +29,20 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   late int _currentIndex;
   bool _isExtended = false;
+  String? _role;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.selectedIndex;
+    _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    final user = await AuthService().getCurrentUser();
+    setState(() {
+      _role = user['role'] as String?;
+    });
   }
 
   @override
@@ -85,6 +96,12 @@ class _MainLayoutState extends State<MainLayout> {
                   selectedIcon: const Icon(Icons.bar_chart),
                   label: Text('reports'.tr),
                 ),
+                if (_role == 'admin')
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.insights_outlined),
+                    selectedIcon: const Icon(Icons.insights),
+                    label: const Text('Analyse IA'),
+                  ),
                 NavigationRailDestination(
                   icon: const Icon(Icons.shopping_cart_outlined),
                   selectedIcon: const Icon(Icons.shopping_cart),
@@ -107,6 +124,7 @@ class _MainLayoutState extends State<MainLayout> {
                 HistoriquePage(),
                 ProduitsPage(),
                 RapportPage(),
+                if (_role == 'admin') const IASalesAnalysisPage(),
                 GestionPage(),
                 SettingsPage(),
               ],
