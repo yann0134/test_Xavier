@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import '../widgets/side_menu.dart';
 import '../widgets/stats_card.dart';
 import '../widgets/order_list_item.dart';
+import '../widgets/low_stock_notification.dart';
+import '../stock/low_stock_page.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../commandes/commande_page.dart';
 import '../factures/receipt_modal.dart';
@@ -19,7 +21,8 @@ class HomePage extends StatefulWidget {
   _HomePageState createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   final _dbHelper = DBHelper();
   final _pageStateService = PageStateService();
   StreamSubscription? _pageSubscription;
@@ -29,10 +32,21 @@ class _HomePageState extends State<HomePage> {
   int _stockBasCount = 0;
   List<Map<String, dynamic>> _dernieresCommandes = [];
   List<FlSpot> _ventesData = [];
+  late AnimationController _alertController;
+  late Animation<Offset> _alertAnimation;
+  bool _showStockAlert = false;
 
   @override
   void initState() {
     super.initState();
+    _alertController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _alertAnimation =
+        Tween(begin: const Offset(0, -1), end: Offset.zero).animate(
+      CurvedAnimation(parent: _alertController, curve: Curves.easeOut),
+    );
     _pageSubscription = _pageStateService.pageStream.listen((index) {
       if (index == 0) {
         // 0 est l'index de la page d'accueil
@@ -127,6 +141,10 @@ class _HomePageState extends State<HomePage> {
         if (_ventesData.isEmpty) {
           _ventesData = [FlSpot(0, 0)];
         }
+        if (_stockBasCount > 0) {
+          _showStockAlert = true;
+          _alertController.forward(from: 0);
+        }
       });
     } catch (e, stackTrace) {
       print('Erreur lors du chargement des données: $e');
@@ -220,6 +238,11 @@ class _HomePageState extends State<HomePage> {
     _pageStateService.refreshPage(1);
   }
 
+  void _openStockPage() {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const LowStockPage()));
+  }
+
   Future<Map<String, dynamic>> _getCurrentUser() async {
     return await AuthService().getCurrentUser();
   }
@@ -232,16 +255,49 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
+      body: Stack(
         children: [
-          Expanded(
-            child: Column(
+          Row(
+            children: [
+              Expanded(
+                child: Column(
               children: [
                 AppBar(
                   elevation: 0,
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black,
                   actions: [
+                    Stack(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.warning_amber_outlined,
+                              color: Colors.orange),
+                          onPressed: _openStockPage,
+                        ),
+                        if (_stockBasCount > 0)
+                          Positioned(
+                            right: 6,
+                            top: 6,
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: const BoxDecoration(
+                                color: Colors.red,
+                                shape: BoxShape.circle,
+                              ),
+                              constraints:
+                                  const BoxConstraints(minWidth: 16, minHeight: 16),
+                              child: Text(
+                                '$_stockBasCount',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                     FutureBuilder<Map<String, dynamic>>(
                       future: _getCurrentUser(),
                       builder: (context, snapshot) {
@@ -486,7 +542,22 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-    );
+      if (_showStockAlert)
+        Positioned(
+          top: 16,
+          right: 16,
+          child: SlideTransition(
+            position: _alertAnimation,
+            child: LowStockNotification(
+              count: _stockBasCount,
+              onClose: () => setState(() => _showStockAlert = false),
+              onTap: _openStockPage,
+            ),
+          ),
+        ),
+    ],
+  ),
+);
   }
 
   Widget _buildStatsCardWrapper({required Widget child}) {
@@ -528,6 +599,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _pageSubscription?.cancel();
+    _alertController.dispose();
     super.dispose();
   }
 }
