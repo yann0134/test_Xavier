@@ -347,15 +347,25 @@ class _HomePageState extends State<HomePage> {
                                   onPressed: _showPaiementRapideModal,
                                 ),
                                 SizedBox(width: 16),
-                                _buildActionButton(
+                              _buildActionButton(
                                   'Dernière facture',
                                   Icons.receipt,
                                   Colors.orange,
                                   onPressed: _showDernierRecu,
-                                ),
-                              ],
-                            ),
+                              ),
+                              SizedBox(width: 16),
+                              _buildActionButton(
+                                'Résumé IA',
+                                Icons.insights,
+                                Colors.purple,
+                                onPressed: () {
+                                  Navigator.of(context)
+                                      .pushNamed('/seller-summary');
+                                },
+                              ),
+                            ],
                           ),
+                        ),
                           if (_ventesData.isNotEmpty)
                             Container(
                               margin: EdgeInsets.only(bottom: 24),
