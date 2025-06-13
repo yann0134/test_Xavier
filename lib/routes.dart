@@ -5,6 +5,7 @@ import 'services/auth_service.dart';
 import 'views/assistant/modular_ai_page.dart';
 import 'views/assistant/seller_summary_page.dart';
 import 'views/assistant/daily_objective_page.dart';
+import 'views/rapports/rapport_ia_page.dart';
 
 class AppRoutes {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -38,6 +39,9 @@ class AppRoutes {
 
       case '/daily-objective':
         return MaterialPageRoute(builder: (_) => const DailyObjectivePage());
+
+      case '/ai-report':
+        return MaterialPageRoute(builder: (_) => const RapportIAPage());
 
       default:
         return MaterialPageRoute(builder: (_) => LoginPage());
