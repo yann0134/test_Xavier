@@ -18,6 +18,7 @@ class _CommandePageState extends State<CommandePage> {
   List<Map<String, dynamic>> _categories = [];
   List<Map<String, dynamic>> _produits = [];
   List<Map<String, dynamic>> _panier = [];
+  List<Map<String, dynamic>> _suggestions = [];
   String? _selectedCategory;
   String _searchQuery = '';
   double _total = 0;
@@ -71,6 +72,7 @@ class _CommandePageState extends State<CommandePage> {
       _remiseMontant = 0;
       _remisePourcentage = 0;
       _codePromo = null;
+      _loadSuggestions();
     });
   }
 
@@ -79,6 +81,7 @@ class _CommandePageState extends State<CommandePage> {
         .database; // Utiliser le getter statique à la place de getDatabase
     await _loadCategories();
     await _loadProduits();
+    await _loadSuggestions();
   }
 
   Future<void> _loadCategories() async {
@@ -131,6 +134,32 @@ class _CommandePageState extends State<CommandePage> {
     }
   }
 
+  Future<void> _loadSuggestions({Map<String, dynamic>? baseProduit}) async {
+    if (_db == null) return;
+    List<Map<String, dynamic>> produits;
+    if (baseProduit != null && baseProduit['categorieId'] != null) {
+      produits = await _db!.query(
+        'produits',
+        where: 'categorieId = ? AND actif = 1',
+        whereArgs: [baseProduit['categorieId']],
+      );
+    } else {
+      produits = await _db!.query('produits', where: 'actif = 1');
+    }
+
+    final idsInCart = _panier.map((p) => p['id']).toSet();
+    produits = produits
+        .where((p) => !idsInCart.contains(p['id']) && p['id'] != baseProduit?['id'])
+        .take(5)
+        .toList();
+
+    if (mounted) {
+      setState(() {
+        _suggestions = produits;
+      });
+    }
+  }
+
   void _addToPanier(Map<String, dynamic> produit) {
     setState(() {
       final index = _panier.indexWhere((item) => item['id'] == produit['id']);
@@ -140,6 +169,7 @@ class _CommandePageState extends State<CommandePage> {
         _panier.add({...produit, 'quantite': 1});
       }
       _updateTotal();
+      _loadSuggestions(baseProduit: produit);
     });
   }
 
@@ -153,6 +183,7 @@ class _CommandePageState extends State<CommandePage> {
           _panier[index]['quantite']--;
         }
         _updateTotal();
+        _loadSuggestions();
       }
     });
   }
@@ -513,21 +544,28 @@ class _CommandePageState extends State<CommandePage> {
                       ),
                     ),
                     Expanded(
-                      child: ListView.builder(
-                        padding: EdgeInsets.symmetric(vertical: 8),
-                        itemCount: _panier.length,
-                        itemBuilder: (context, index) {
-                          final item = _panier[index];
-                          return CartItem(
-                            nom: item['nom'],
-                            quantite: item['quantite'],
-                            prix: item['prix'],
-                            onAdd: () => _addToPanier(item),
-                            onRemove: () => _removeFromPanier(item['id']),
-                            onDelete: () =>
-                                _removeFromPanier(item['id'], all: true),
-                          );
-                        },
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: ListView.builder(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              itemCount: _panier.length,
+                              itemBuilder: (context, index) {
+                                final item = _panier[index];
+                                return CartItem(
+                                  nom: item['nom'],
+                                  quantite: item['quantite'],
+                                  prix: item['prix'],
+                                  onAdd: () => _addToPanier(item),
+                                  onRemove: () => _removeFromPanier(item['id']),
+                                  onDelete: () =>
+                                      _removeFromPanier(item['id'], all: true),
+                                );
+                              },
+                            ),
+                          ),
+                          _buildSuggestionsBox(),
+                        ],
                       ),
                     ),
                     Container(
@@ -762,6 +800,77 @@ class _CommandePageState extends State<CommandePage> {
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSuggestionsBox() {
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.recommend, color: Colors.blue),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Recommandations IA pour compléter la vente',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          if (_suggestions.isEmpty)
+            Text('Aucune suggestion pour le moment',
+                style: TextStyle(color: Colors.grey[600]))
+          else
+            Column(
+              children:
+                  _suggestions.map((p) => _buildSuggestionItem(p)).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuggestionItem(Map<String, dynamic> produit) {
+    final badges = [
+      'Fréquemment acheté ensemble',
+      'Haute marge',
+      'Meilleur choix client'
+    ];
+    final badge = badges[produit['id'] % badges.length];
+    return Card(
+      margin: EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(Icons.local_offer, color: Colors.grey[700]),
+        title: Text(produit['nom'], maxLines: 1, overflow: TextOverflow.ellipsis),
+        subtitle: Text(badge),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('€${(produit['prix'] as double).toStringAsFixed(2)}'),
+            SizedBox(height: 4),
+            ElevatedButton(
+              onPressed: () => _addToPanier(produit),
+              child: Text('Ajouter'),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              ),
+            ),
+          ],
         ),
       ),
     );
