@@ -541,6 +541,21 @@ class _RapportPageState extends State<RapportPage> {
                 ),
               ),
             ),
+            SizedBox(width: 8),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.of(context).pushNamed('/ai-report'),
+              icon: Icon(Icons.auto_awesome, size: 18),
+              label: Text('Rapport IA'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.withOpacity(0.1),
+                foregroundColor: Colors.blue,
+                elevation: 0,
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
             SizedBox(width: 16),
           ],
         ),
