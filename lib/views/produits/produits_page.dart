@@ -208,7 +208,7 @@ class _ProduitsPageState extends State<ProduitsPage> {
   Future<List<String>> _searchProductImages(String query) async {
     try {
       final model = GenerativeModel(
-        model: 'gemini-1.5-flash',
+        model: 'gemini-1.5-pro',
         apiKey: ApiKeys.geminiApiKey,
       );
 

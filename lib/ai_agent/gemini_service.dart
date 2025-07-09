@@ -10,8 +10,8 @@ class GeminiService {
   factory GeminiService({String? apiKey}) {
     if (!_initialized) {
       _model = GenerativeModel(
-        model: 'gemini-1.5-flash-latest',
-        apiKey: apiKey ?? ApiKeys.geminiApiKey,
+        model: 'gemini-1.5-pro', // Mis à jour vers 2.0 Flash-Lite
+        apiKey: ApiKeys.geminiApiKey,
       );
       _initialized = true;
     }
@@ -22,17 +22,71 @@ class GeminiService {
 
   Future<Map<String, dynamic>> decideTool(
       String query, List<String> availableTools) async {
-    final prompt =
-        '''You are an assistant that can use tools: ${availableTools.join(', ')}.
-Decide the best tool for the user query or answer directly.
-Respond only with JSON in one of these formats:
-{ "tool": "<tool name>", "toolQuery": "<query>" }
-or
-{ "answer": "<text>" }
-Query: "$query"''';
+    final prompt = '''
+    Tu es un assistant pour une application de caisse enregistreuse. Analyse cette requête utilisateur: "$query"
+    
+    Tu as accès à ces outils: ${availableTools.join(', ')}
+    
+    IMPORTANT: Ta réponse doit être uniquement un objet JSON valide, rien d'autre.
+    
+    RÈGLES:
+    1. Pour les questions sur l'inventaire/produits: {"tool": "inventory", "toolQuery": "la_requête"}
+    2. Pour les questions sur les ventes: {"tool": "sales", "toolQuery": "la_requête"}
+    3. Pour les autres questions: {"answer": "ta_réponse"}
+    
+    Exemple 1: Si l'utilisateur demande "combien j'ai de produits", réponds:
+    {"tool": "inventory", "toolQuery": "combien produit"}
+    
+    Exemple 2: Si l'utilisateur demande "bonjour", réponds:
+    {"answer": "Bonjour, comment puis-je vous aider ?"}
+    ''';
 
-    final response = await _model.generateContent([Content.text(prompt)]);
-    return _extractJson(response.text);
+    try {
+      final response = await _model.generateContent([Content.text(prompt)]);
+      final text = response.text?.trim() ?? '';
+
+      // Nettoyage du texte pour s'assurer qu'il ne contient que du JSON
+      String jsonStr = text.replaceAll(RegExp(r'^```json\s*|\s*```$'), '');
+      if (!jsonStr.startsWith('{')) {
+        final start = jsonStr.indexOf('{');
+        if (start >= 0) {
+          jsonStr = jsonStr.substring(start);
+        }
+      }
+      if (!jsonStr.endsWith('}')) {
+        final end = jsonStr.lastIndexOf('}');
+        if (end >= 0) {
+          jsonStr = jsonStr.substring(0, end + 1);
+        }
+      }
+
+      try {
+        final result = json.decode(jsonStr);
+        if (result is Map<String, dynamic>) {
+          print('Réponse JSON valide: $result'); // Debug
+          return result;
+        }
+      } catch (e) {
+        print('Erreur parsing JSON: $e\nTexte reçu: $jsonStr'); // Debug
+      }
+
+      // Fallback pour les questions sur l'inventaire
+      if (query.toLowerCase().contains('combien') &&
+          query.toLowerCase().contains('produit')) {
+        return {'tool': 'inventory', 'toolQuery': 'combien produit'};
+      }
+
+      return {
+        'answer':
+            "Je n'ai pas bien compris votre demande. Pouvez-vous la reformuler ?"
+      };
+    } catch (e) {
+      print('Erreur Gemini: $e');
+      return {
+        'answer':
+            "Désolé, je rencontre des difficultés techniques. Réessayez plus tard."
+      };
+    }
   }
 
   Future<Map<String, dynamic>> analyzeBusinessDay(

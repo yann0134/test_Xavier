@@ -14,7 +14,7 @@ class LLMAgentModel extends Model {
 
   // Initialiser l'API Gemini
   final model = GenerativeModel(
-    model: 'gemini-1.5-flash-latest',
+    model: 'gemini-1.5-pro',
     apiKey:
         'AIzaSyCCVre0MdH35vty9lRbqQ0FglYKPt8KQ9c', // À remplacer par votre clé API
   );

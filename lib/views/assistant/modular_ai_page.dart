@@ -36,7 +36,8 @@ class _ModularAIPageState extends State<ModularAIPage> {
         manager.registerTool(ctor());
       }
     }
-    final gemini = GeminiService(apiKey: 'AIzaSyCCVre0MdH35vty9lRbqQ0FglYKPt8KQ9c');
+    final gemini =
+        GeminiService(apiKey: 'AIzaSyA6oLyqvIj9mnFtPM83iuNPAg6Nrlu2G38');
     agent = ModularAIAgent(manager, gemini);
     setState(() => _loading = false);
   }

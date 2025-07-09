@@ -25,8 +25,17 @@ class ModularAIAgent {
     }
 
     try {
+      // On teste d'abord les outils locaux directement
+      for (final tool in toolManager.tools) {
+        if (tool.canHandle(normalized)) {
+          return await tool.handle(normalized);
+        }
+      }
+
+      // Si aucun outil local ne correspond, on demande à Gemini
       final decision = await gemini.decideTool(
           query, toolManager.tools.map((t) => t.name).toList());
+      print("decision gemini $decision");
 
       if (decision.containsKey('answer')) {
         return decision['answer'] as String;
@@ -35,27 +44,26 @@ class ModularAIAgent {
       if (decision.containsKey('tool')) {
         final toolName = decision['tool'] as String;
         final toolQuery = (decision['toolQuery'] ?? query) as String;
+
+        // Recherche de l'outil correspondant
         AITool? selected;
         for (final t in toolManager.tools) {
-          if (t.name == toolName) {
+          if (t.name.toLowerCase() == toolName.toLowerCase()) {
             selected = t;
             break;
           }
         }
+
+        // Si on trouve l'outil, on l'utilise
         if (selected != null) {
           return await selected.handle(toolQuery);
         }
       }
-    } catch (_) {
-      // Ignore Gemini errors and fall back to local tool matching
+    } catch (e) {
+      print('Erreur lors du traitement: $e');
     }
 
-    for (final tool in toolManager.tools) {
-      if (tool.canHandle(query)) {
-        return await tool.handle(query);
-      }
-    }
-
-    return _availableToolsMessage();
+    // Message par défaut si aucune réponse n'a été trouvée
+    return "Je n'ai pas compris votre demande. Pouvez-vous reformuler ou taper 'help' pour voir les commandes disponibles ?";
   }
 }
